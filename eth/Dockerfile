@@ -23,6 +23,15 @@ RUN cargo install cryo_cli
 WORKDIR /app
 RUN mkdir -p /app/logs
 
+# Create a custom user with UID 1234 and GID 1234
+RUN groupadd -g 1000 debian && \
+    useradd -m -u 1000 -g debian debian
+# Switch to the custom user
+USER debian
+
+# Set the workdir
+WORKDIR /home/debian
+
 # Copier les fichiers nécessaires
 COPY requirements.txt .
 COPY README.md .
