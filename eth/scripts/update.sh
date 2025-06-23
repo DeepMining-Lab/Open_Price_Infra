@@ -36,6 +36,8 @@ LAST_FILE_UNISWAP="$PROJECT_DIR/data/uniswap_eth_usd_last.csv"
 LAST_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_eth_usd_last.csv"
 
 git checkout main
+git reset --hard
+git clean -fd
 git pull --rebase origin main
 
 # Afficher info RPC
@@ -186,10 +188,10 @@ fi
 
 # 11. Commit & Push du README mis-à-jour sur Github
 
-# git add README.md
-# git commit -m "Update data"
+git add README.md
+git commit -m "Update data"
 
-# git push origin main
+git push origin main
 
 # Fin du script
 sleep 3

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cd /app || exit 1
+cd /app/eth || exit 1
 
 # RPC
 RPC=${RPC:-"https://ethereum-rpc.publicnode.com"}

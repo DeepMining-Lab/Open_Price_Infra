@@ -21,33 +21,34 @@ RUN cargo install cryo_cli
 
 # Créer le répertoire de l'application
 WORKDIR /app
-RUN mkdir -p /app/logs
-
-# Create a custom user with UID 1234 and GID 1234
-RUN groupadd -g 1000 debian && \
-    useradd -m -u 1000 -g debian debian
-# Switch to the custom user
-USER debian
+RUN mkdir -p /app/eth/logs
+RUN mkdir -p /app/eth
 
 # Set the workdir
-WORKDIR /home/debian
+# WORKDIR /home/debian
 
 # Copier les fichiers nécessaires
-COPY requirements.txt .
-COPY README.md .
-COPY scripts ./scripts
-COPY data ./data
+COPY eth/requirements.txt eth/requirements.txt
+COPY eth/README.md eth/README.md
+COPY eth/scripts eth/scripts
+COPY eth/data eth/data
 COPY .git .git
 COPY .gitignore ./
 
 # Rendre les scripts exécutables
-RUN chmod +x ./scripts/*.sh
+RUN chmod +x eth/scripts/*.sh
 
 # Installer les dépendances Python
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r eth/requirements.txt
 
 # Point d'entrée personnalisé
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY eth/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# # Create a custom user with UID 1234 and GID 1234
+# RUN groupadd -g 1000 debian && \
+#     useradd -m -u 1000 -g debian debian
+# # Switch to the custom user
+# USER debian
 
 ENTRYPOINT ["docker-entrypoint.sh"]
