@@ -1,9 +1,10 @@
 # 🧭 Open Price is an open-data initiative providing a standardized, continuously updated historical dataset of crypto-asset prices from on-chain sources (e.g., Chainlink, Uniswap V3). Fully compliant with FAIR principles, it empowers researchers and developers with transparent, reproducible insights into the price dynamics of various blockchain ecosystems.
 
-## Ajout explications repo 
+## 🧾 Repository Explanations
 
-Dans les dossiers des Blockchain comme par exemple "eth" vous trouverez les différents scripts qui ont servi à extraire les données ainsi que le script qui a servi à générer le README.md à partir du template "README.tpl.md".
-Dans le dossier docs vous trouver les informations relatives aux pages web pour chaque Blockchain.
+In the folders corresponding to each blockchain (e.g., "eth"), you will find the various scripts used to extract the data, as well as the script that generated the README.md file from the README.tpl.md template.
+The docs folder contains information related to the web pages for each blockchain.
+
 
 ## 📂 Accessing CSV Data by Blockchain
 
