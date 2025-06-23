@@ -7,8 +7,8 @@ Open Price ETH is an open-data initiative providing a standardized, continuously
 
 | Dataset                | Start Date Available       | End Date Available     | CSV File                                          |
 |------------------------|----------------------------|------------------------|---------------------------------------------------|
-| **Chainlink ETH/USD**  | 2020-08-07 11:28:13 UTC    | 2025-06-04 08:00:35 UTC| `data/chainlink_eth_usd.csv`                      |    
-| **Uniswap V3 ETH/USDC**| 2021-05-05 22:15:01 UTC    | 2025-06-04 08:05:23 UTC| `data/uniswap_eth_usd.csv`                        | 
+| **Chainlink ETH/USD**  | 2020-08-07 11:28:13 UTC    | 2025-06-23 14:12:23 UTC| `data/chainlink_eth_usd.csv`                      |    
+| **Uniswap V3 ETH/USDC**| 2021-05-05 22:15:01 UTC    | 2025-06-23 14:14:35 UTC| `data/uniswap_eth_usd.csv`                        | 
 
 Extraction date and time are taken from the CSV file’s last modification timestamp.
 
@@ -160,12 +160,36 @@ Collect and export to `data/uniswap_eth_usd.csv` with columns:
 
 ---
 
+## 🐳 Running with Docker
+
+# Prerequisites
+
+- Docker installed on your local machine
+
+If you’d like to run the project locally via Docker, simply execute:
+
+docker run -d --name open-price-eth \
+  [Optional] -e INTERVAL_DAYS=1 \
+  [Optional] -e RPC="https://rpc_provider" \
+  -v $(pwd)/logs:/app/logs \
+  open-price-eth
+
+- **INTERVAL_DAYS (optional):**  
+  - If not specified, the update will run only once.  
+  - Otherwise, it sets how often (in days) the CSV files are updated.
+
+- **RPC (optional):**  
+  - If not specified, the public node at `https://ethereum-rpc.publicnode.com` will be used by default.  
+  - Note that this is a public node, so it has limits on the amount of data it can return.
+
+- **`-v $(pwd)/logs:/app/logs`:**  
+  - Mounts a `logs/` folder in the current directory to `/app/logs` inside the container, ensuring that all logs are kept on your host machine.  
+
+---
+
 ## 🛠️ Auto-Generating the README
 
 We use a Jinja2 template plus a Python script to inject the extraction date automatically based on the CSV’s last-modified timestamp
-
-**Install dependencies**  
-   pip install -r requirements.txt
 
 ---
 
