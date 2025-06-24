@@ -171,12 +171,14 @@ echo "[INFO] Generate_readme terminé"
 # 10. SCP dans Filebrowser des data
 
 MAX=5
+
 for i in $(seq 1 $MAX); do
   echo "[INFO] Tentative #$i..."
   scp data/{chainlink_eth_usd.csv,uniswap_eth_usd.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices && break
   echo "[WARNING] Échec (code : $?). Nouvelle tentative dans 3s." >&2
   sleep 3
 done
+
 
 if [ $i -le $MAX ]; then
   echo "[INFO] Transfert réussi à la tentative #$i."

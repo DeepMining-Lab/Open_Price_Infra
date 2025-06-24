@@ -12,43 +12,48 @@ RUN apt-get update && apt-get install -y \
     openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Installer Rust et Cargo (requis pour cryo)
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-
 # Installer cryo
-RUN cargo install cryo_cli
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+ && /root/.cargo/bin/cargo install --root /usr/local cryo_cli
+ENV PATH="/usr/local/bin:${PATH}"
 
-# Créer le répertoire de l'application
-WORKDIR /app
-RUN mkdir -p /app/eth/logs
-RUN mkdir -p /app/eth
+
+# Create a custom user with UID 1234 and GID 1234
+RUN groupadd -g 1000 debian && \
+    useradd -m -u 1000 -g debian debian
+
+
+ RUN mkdir -p /app/eth/logs /app/eth \
+  && mkdir -p /home/debian/.ssh \
+  && ssh-keyscan github.com > /home/debian/.ssh/known_hosts \
+  && chmod 700 /home/debian/.ssh \
+  && chmod 600 /home/debian/.ssh/known_hosts \
+  && chown -R debian:debian /app /home/debian/.ssh
+
+
+# # Switch to the custom user
+USER debian
+
+# Configurer l'identité Git du bot
+RUN git config --global user.name "ETH Bot" \
+ && git config --global user.email "eth_bot@heg.ch"
 
 # Set the workdir
-# WORKDIR /home/debian
+WORKDIR /app
 
-# Copier les fichiers nécessaires
-COPY eth/requirements.txt eth/requirements.txt
-COPY eth/README.md eth/README.md
-COPY eth/scripts eth/scripts
-COPY eth/data eth/data
-COPY .git .git
-COPY .gitignore ./
+COPY --chown=debian:debian eth/requirements.txt eth/requirements.txt
+COPY --chown=debian:debian eth/README.md eth/README.md
+COPY --chown=debian:debian eth/scripts eth/scripts
+COPY --chown=debian:debian eth/data eth/data
+COPY --chown=debian:debian .git .git
+COPY --chown=debian:debian .gitignore ./
 
-# Rendre les scripts exécutables
-RUN chmod +x eth/scripts/*.sh
-
-# Installer les dépendances Python
-RUN pip install --no-cache-dir -r eth/requirements.txt
+RUN pip install --no-cache-dir -r eth/requirements.txt \
+  && chmod +x eth/scripts/*.sh
 
 # Point d'entrée personnalisé
-COPY eth/docker-entrypoint.sh /usr/local/bin/
+COPY --chown=debian:debian eth/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# # Create a custom user with UID 1234 and GID 1234
-# RUN groupadd -g 1000 debian && \
-#     useradd -m -u 1000 -g debian debian
-# # Switch to the custom user
-# USER debian
 
 ENTRYPOINT ["docker-entrypoint.sh"]
