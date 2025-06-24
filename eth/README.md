@@ -7,7 +7,7 @@ Open Price ETH is an open-data initiative providing a standardized, continuously
 
 | Dataset                | Start Date Available       | End Date Available     | CSV File                                          |
 |------------------------|----------------------------|------------------------|---------------------------------------------------|
-| **Chainlink ETH/USD**  | 2020-08-07 11:28:13 UTC    | 2025-06-24 12:46:23 UTC| `data/chainlink_eth_usd.csv`                      |    
+| **Chainlink ETH/USD**  | 2020-08-07 11:28:13 UTC    | 2025-06-24 14:05:23 UTC| `data/chainlink_eth_usd.csv`                      |    
 | **Uniswap V3 ETH/USDC**| 2021-05-05 22:15:01 UTC    | 2025-06-24 01:57:59 UTC| `data/uniswap_eth_usd.csv`                        | 
 
 Extraction date and time are taken from the CSV file’s last modification timestamp.
@@ -168,11 +168,15 @@ Collect and export to `data/uniswap_eth_usd.csv` with columns:
 
 If you’d like to run the project locally via Docker, simply execute:
 
-docker run -d --name open-price-eth \
-  [Optional] -e INTERVAL_DAYS=1 \
-  [Optional] -e RPC="https://rpc_provider" \
-  -v $(pwd)/logs:/app/logs \
-  open-price-eth
+docker pull stebuilds/open-price-eth
+
+
+docker run -d --name open-price-eth
+  [Optional] -e INTERVAL_DAYS=1
+  [Optional] -e RPC="https://rpc_provider"
+             -v $(pwd)/logs:/app/logs
+  stebuilds/open-price-eth
+
 
 - **INTERVAL_DAYS (optional):**  
   - If not specified, the update will run only once.  
