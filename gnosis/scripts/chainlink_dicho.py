@@ -4,8 +4,10 @@
 import csv
 import time
 import argparse
+import os
+import sys
 from web3 import Web3
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 # Définir l'argument début
 parser = argparse.ArgumentParser(description="Timestamp de début.")
@@ -17,7 +19,14 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-RPC_URL = 'https://rpc.gnosischain.com/'
+# RPC_URL = 'https://rpc.gnosischain.com/'
+
+# Lecture de la variable d'environnement RPC
+RPC_URL = os.environ.get("RPC", "")
+if not RPC_URL:
+    print("ERREUR: la variable d'environnement 'RPC' n'est pas définie.", file=sys.stderr)
+    sys.exit(1)
+
 CONTRACT_ADDRESS = '0x22441d81416430A54336aB28765abd31a792Ad37' # Contrat Chainlink pour la pair GNO/USD sur Ethereum Mainnet
 FILENAME = "data/chainlink_gno_usd_last.csv"
 
@@ -33,7 +42,8 @@ def convertir_timestamp(ts: int) -> str:
     """
     if ts == 0:
         return "Invalid round (ts=0)"
-    return datetime.fromtimestamp(ts, UTC).strftime('%Y-%m-%d %H:%M:%S')
+    # return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(timespec='seconds') #ISO 8601
+    return datetime.fromtimestamp(ts, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S+00:00')
 
 def to_round_id(phase: int, aggregator_id: int) -> int:
     """
@@ -129,8 +139,14 @@ def find_last_aggregator_id(phase: int, max_agg_id: int, target_ts: int) -> int:
             high = mid - 1
     return result
 
-# Initialisation de la connexion Ethereum
+# Initialisation de la connexion
 web3 = Web3(Web3.HTTPProvider(RPC_URL))
+
+if not web3.is_connected():
+        print(f"ERREUR: impossible de se connecter à l'endpoint RPC '{RPC_URL}'", file=sys.stderr)
+        sys.exit(1)
+
+print(f"Connexion au réseau établie: {web3.is_connected()}")
 
 checksum_addr = Web3.to_checksum_address(CONTRACT_ADDRESS)
 

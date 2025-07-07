@@ -3,7 +3,7 @@
 
 #!/usr/bin/env bash
 
-# Description: Met à jour les données de Chainlink et d'Uniswap et concatène aux données existantes
+# Description: Met à jour les données de Chainlink et concatène aux données existantes
 # Usage: bash update.sh
 # Pour les droits d'exécution: chmod +x update.sh
 
@@ -33,12 +33,20 @@ DATA_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_gno_usd.csv"
 OUTPUT_DIR="$PROJECT_DIR/data/output"
 LAST_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_gno_usd_last.csv"
 
-# Vérifier l'existence du CSV Uniswap & du CSV Chainlink 
-if [[ ! -f "$DATA_FILE_UNISWAP" ]]; then
-  echo "[ERROR] Fichier $DATA_FILE_UNISWAP introuvable." >&2
-  exit 1
+git checkout main
+git reset --hard
+git clean -fd
+git pull --rebase origin main
+
+
+# Afficher info RPC
+if [[ -z "$RPC" ]]; then
+  echo "WARNING: La variable RPC n'est pas définie." >&2
+else
+  echo "INFO: Utilisation de RPC=$RPC"
 fi
-echo "[INFO] Fichier de données: $DATA_FILE_UNISWAP"
+
+# Vérifier l'existence du CSV Chainlink 
 
 if [[ ! -f "$DATA_FILE_CHAINLINK" ]]; then
   echo "[ERROR] Fichier $DATA_FILE_CHAINLINK introuvable." >&2
@@ -49,36 +57,13 @@ echo "[INFO] Fichier de données: $DATA_FILE_CHAINLINK"
 # Récupérer et ajouter +1 seconde à la date de dernière modif des CSVs
 
 # Extraire le champ “timestamp” de la dernière ligne des CSVs
-last_iso_uniswap=$(tail -n 1 "$DATA_FILE_UNISWAP" | cut -d',' -f1)
 last_iso_chainlink=$(tail -n 1 "$DATA_FILE_CHAINLINK" | cut -d',' -f4)
 
 # Convertir ce timestamp ISO en secondes Unix puis +1
-start_ts_uniswap=$(( $(date -d "$last_iso_uniswap" +"%s") + 1 ))
 start_ts_chainlink=$(( $(date -d "$last_iso_chainlink" +"%s") + 1 ))
 
-echo "[INFO] Timestamp de démarrage pour Uniswap (dernière date +1s) : $start_ts_uniswap"
 echo "[INFO] Timestamp de démarrage pour Chainlink (dernière date +1s) : $start_ts_chainlink"
 
-# 3. Lancer cryo logs avec timestamp
-echo "[INFO] Lancement de 'cryo logs'..."
-
-# https://eth.rpc.faironchain.org/
-echo "$PROJECT_DIR"
-
-cryo logs \
-  --address 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640 \
-  --rpc https://ethereum-rpc.publicnode.com \
-  --output-dir $PROJECT_DIR/data/output \
-  --csv \
-  --timestamps ${start_ts_uniswap}: \
-|| echo "[WARNING] 'cryo logs' a rencontré un problème... Le script continue..."
-
-echo "[INFO] 'cryo logs' terminé"
-
-# Exécuter le traitement pour traiter les logs d'Uniswap
-echo "[INFO] Lancement de Uniswap_process_logs.py..."
-python3 "$PROJECT_DIR/scripts/Uniswap_process_logs.py"
-echo "[INFO] Traitement Uniswap terminé"
 
 # Exécuter le traitement pour récupérer les prix de Chainlink
 echo "[INFO] Lancement de chainlink_dicho.py..."
@@ -109,19 +94,33 @@ echo "[INFO] Lancement de generate_readme.py..."
 python3 "$PROJECT_DIR/scripts/generate_readme.py"
 echo "[INFO] Generate_readme terminé"
 
-# Commit & Push du README mis-à-jour sur Github
-# git checkout main
-# git add "README.md"
-# git commit -m "Update data"
 
-# git pull --rebase origin main
+# SCP dans Filebrowser des data
 
-# git push origin main
+MAX=5
+
+for i in $(seq 1 $MAX); do
+  echo "[INFO] Tentative #$i..."
+  scp data/{chainlink_gno_usd.csv} debian@extract.lan.text-analytics.ch:/data/gnosis/prices && break
+  echo "[WARNING] Échec (code : $?). Nouvelle tentative dans 3s." >&2
+  sleep 3
+done
 
 
-# SCP dans Filebrowser sur les data
+if [ $i -le $MAX ]; then
+  echo "[INFO] Transfert réussi à la tentative #$i."
+else
+  echo "[ERROR] Impossible de transférer après $MAX tentatives." >&2
+  exit 1
+fi
 
+# 11. Commit & Push du README mis-à-jour sur Github
 
+git add README.md
+git commit -m "Update data"
+
+git push origin main
 
 # Fin du script
+sleep 3
 echo "=== Fin du script ==="
