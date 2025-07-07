@@ -6,7 +6,7 @@
 
 | Dataset                | Start Date Available       | End Date Available     | CSV File                                          |
 |------------------------|----------------------------|------------------------|---------------------------------------------------|
-| **Chainlink GNO/USD**  | 2022-01-06 14:26:05 UTC    | 2025-06-17 11:20:35 UTC| `data/chainlink_gno_usd.csv`                      |    
+| **Chainlink GNO/USD**  | 2022-01-06 14:26:05 UTC    | 2022-01-23 03:05:10 UTC| `data/chainlink_gno_usd.csv`                      |    
 
 Extraction date and time are taken from the CSV file’s last modification timestamp.
 
