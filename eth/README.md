@@ -7,8 +7,8 @@ Open Price ETH is an open-data initiative providing a standardized, continuously
 
 | Dataset                | Start Date Available       | End Date Available     | CSV File                                          |
 |------------------------|----------------------------|------------------------|---------------------------------------------------|
-| **Chainlink ETH/USD**  | 2020-08-07 11:28:13 UTC    | 2025-09-04 13:38:59 UTC| `data/chainlink_eth_usd.csv`                      |    
-| **Uniswap V3 ETH/USDC**| 2021-05-05 22:15:01 UTC    | 2025-09-03 17:13:23 UTC| `data/uniswap_eth_usd.csv`                        | 
+| **Chainlink ETH/USD**  | 2020-08-07 11:28:13 UTC    | 2025-09-05 13:55:35 UTC| `data/chainlink_eth_usd.csv`                      |    
+| **Uniswap V3 ETH/USDC**| 2021-05-05 22:15:01 UTC    | 2025-09-04 03:16:47 UTC| `data/uniswap_eth_usd.csv`                        | 
 
 Extraction date and time are taken from the CSV file’s last modification timestamp.
 
