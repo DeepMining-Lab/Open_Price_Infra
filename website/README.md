@@ -1,0 +1,1 @@
+This site follows the same build, configuration and deployment workflow used by FairOnChain (faironchain.org). If you want to understand how this site is structured, how pages are generated, or to inspect deployment scripts and configuration, please consult the FairOnChain website repository: https://github.com/FairOnChain/faironchain.github.io/blob/main/README.md

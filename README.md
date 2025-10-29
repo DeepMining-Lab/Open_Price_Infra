@@ -42,3 +42,22 @@ In the `docs` folder, you will find information related to the web pages for eac
   - Building dashboards or analytics tools with up-to-the-minute and historical data  
 
 Feel free to clone or fork any of the extraction scripts, contribute improvements, or integrate the datasets directly into your workflows for a transparent, reproducible view of blockchain price dynamics.  
+
+
+### 🌐 About Website
+
+## Jekyll Installation
+
+If you don't have Jekyll installed yet, follow these steps:
+
+### On Ubuntu (or Windows WSL)
+
+```bash
+sudo apt update
+sudo apt install ruby-full build-essential zlib1g-dev
+gem install jekyll bundler
+
+jekyll new my-site
+cd my-site
+bundle exec jekyll serve
+```
