@@ -7,15 +7,15 @@ subtitle: Ethereum Datasets
 page_class: ethereum-page
 ---
 
-- {% raw %}
+{% raw %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Dataset",
-  "@id": "{{ page.url | absolute_url }}#dataset",
+  "@id": "https://fair.deepmining.ch/ethereum#dataset",
   "name": "Open Prices — Ethereum Datasets",
   "description": "Daily refreshed on-chain Ethereum price datasets combining Chainlink oracle feeds and Uniswap V3 swap data.",
-  "url": "{{ page.url | absolute_url }}",
+  "url": "https://fair.deepmining.ch/ethereum",
   "keywords": ["Ethereum", "ETH", "Chainlink", "Uniswap V3", "On-chain price", "Crypto dataset"],
   "license": "https://creativecommons.org/licenses/by/4.0/",
   "creator": {
@@ -30,6 +30,13 @@ page_class: ethereum-page
   },
   "isAccessibleForFree": true,
   "distribution": [
+    {
+      "@type": "DataDownload",
+      "name": "Folder containing all datasets on Ethereum prices",
+      "url": "https://files.deepmining.ch/files/ethereum/prices/",
+      "encodingFormat": "text/html",
+      "description": "Page containing CSV files with Ethereum prices extracted from Chainlink and Uniswap V3."
+    },
     {
       "@type": "DataDownload",
       "name": "Chainlink ETH/USD CSV",
