@@ -296,10 +296,45 @@ body, header, footer {
 .white-bg { background-color: #fff; }
 
 
+.nav-forest,
+.nav-forest:link,
+.nav-forest:visited,
+.nav-forest:active {
+  color: #022c22 !important;
+  font-weight: 700;
+  text-decoration: underline;
+}
+.nav-forest:hover {
+  color: #0d9488 !important;
+  background-color: rgba(13, 148, 136, 0.15);
+  text-decoration: underline;
+}
+
+.white-bg .site-nav .page-link.nav-forest,
+.white-bg .site-nav .page-link.nav-forest:link,
+.white-bg .site-nav .page-link.nav-forest:visited,
+.white-bg .site-nav .page-link.nav-forest:active {
+  color: #022c22 !important;
+  font-weight: 700;
+  text-decoration: underline;
+}
+.white-bg .site-nav .page-link.nav-forest:hover {
+  color: #0d9488 !important;
+  background-color: rgba(13, 148, 136, 0.18);
+  text-decoration: underline;
+}
+
 .grey,  .grey  * { color: #999    !important; }
 .black, .black * { color: #021009 !important; }
 .blue,  .blue  * { color: #1166ff !important; }
 .aqua,  .aqua  * { color: #00dfcf !important; }
+
+.site-nav .page-link {
+  color: #022c22 !important;
+}
+.site-nav .page-link:hover {
+  color: #0d9488 !important;
+}
 
 .fair-highlight {
   color: #00dfcf !important;
@@ -309,7 +344,48 @@ p a, p a:link, p a:active, p a:hover, p a:visited { color: #00dfcf !important; }
 
 header a, header a:link, header a:active, header a:hover, header a:visited,
 footer a, footer a:link, footer a:active, footer a:hover, footer a:visited,
-em { color: #1166ff !important; }
+em { color: #022c22 !important; }
+
+.site-nav .page-link,
+.site-nav .page-link:link,
+.site-nav .page-link:visited,
+.site-nav .page-link:active,
+.site-nav .page-link:hover {
+  color: #022c22 !important;
+}
+.site-nav .page-link:hover {
+  background-color: rgba(13, 148, 136, 0.18);
+}
+
+.black a,
+.black a:link,
+.black a:visited,
+.black a:active {
+  color: #022c22 !important;
+}
+.black a:hover {
+  color: #0d9488 !important;
+  background-color: rgba(13, 148, 136, 0.18);
+}
+
+/* Preserve brand color on navigation links */
+header .site-nav .page-link.nav-forest,
+header .site-nav .page-link.nav-forest:link,
+header .site-nav .page-link.nav-forest:visited,
+header .site-nav .page-link.nav-forest:active,
+.black .nav-forest,
+.black .nav-forest:link,
+.black .nav-forest:visited,
+.black .nav-forest:active {
+  color: #022c22 !important;
+  font-weight: 700;
+}
+
+header .site-nav .page-link.nav-forest:hover,
+.black .nav-forest:hover {
+  color: #0d9488 !important;
+  background-color: rgba(13, 148, 136, 0.18);
+}
 
 footer a:hover, p a:hover, li a:hover, li span:hover, nav a:hover {
   text-decoration: none;
@@ -340,35 +416,13 @@ footer a:hover, p a:hover, li a:hover, li span:hover, nav a:hover {
     border-radius: 20px;
 }
 
-/* Styles spécifiques pour la page Ethereum */
-body.ethereum-page .container + article {
-  margin: 60px auto 80px auto;
-  padding: 0 40px;
-  max-width: 1000px;
-  line-height: 1.7;
-  text-align: center;
-}
-
-body.ethereum-page h1 {
-  margin: 20px auto 50px auto;
-  font-size: 48px;
-}
-
-body.ethereum-page h3,
+/* Styles spécifiques pour la page Gnosis */
 body.gnosis-page h3 {
   margin: 40px auto 25px auto;
   font-size: 28px;
   color: #00dfcf;
 }
 
-body.ethereum-page p {
-  margin: 0 0 20px 0;
-  font-size: 16px;
-  text-align: justify;
-  color: #e0e0e0;
-}
-
-body.ethereum-page blockquote,
 body.gnosis-page blockquote {
   margin: 25px 0 35px 0;
   padding: 20px 25px;
@@ -379,13 +433,11 @@ body.gnosis-page blockquote {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-body.ethereum-page ul,
 body.gnosis-page ul {
   margin: 20px 0 30px 0;
   padding-left: 0;
 }
 
-body.ethereum-page li,
 body.gnosis-page li {
   margin: 12px 0;
   font-size: 16px;
@@ -394,7 +446,6 @@ body.gnosis-page li {
   padding-left: 20px;
 }
 
-body.ethereum-page li:before,
 body.gnosis-page li:before {
   content: "→";
   color: #00dfcf;
@@ -403,21 +454,18 @@ body.gnosis-page li:before {
   left: 0;
 }
 
-body.ethereum-page li a,
 body.gnosis-page li a {
   color: #00dfcf;
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
-body.ethereum-page li a:hover,
 body.gnosis-page li a:hover {
   color: #1166ff;
   text-decoration: underline;
 }
 
 /* Style pour la section d'information sur les datasets */
-body.ethereum-page .dataset-description,
 body.gnosis-page .dataset-description {
   background: linear-gradient(135deg, rgba(0, 223, 207, 0.12), rgba(17, 102, 255, 0.06));
   padding: 25px 30px;
@@ -428,7 +476,6 @@ body.gnosis-page .dataset-description {
   color: #fff !important;
 }
 
-body.ethereum-page .dataset-description p,
 body.gnosis-page .dataset-description p {
   margin: 0 0 15px 0;
   font-size: 16px;
@@ -437,13 +484,11 @@ body.gnosis-page .dataset-description p {
   text-align: justify;
 }
 
-body.ethereum-page .dataset-description strong,
 body.gnosis-page .dataset-description strong {
   color: #00dfcf;
   font-weight: 600;
 }
 
-body.ethereum-page .dataset-description code,
 body.gnosis-page .dataset-description code {
   background-color: rgba(0, 0, 0, 0.3);
   padding: 2px 6px;
@@ -454,7 +499,6 @@ body.gnosis-page .dataset-description code {
 }
 
 /* Download call-to-action */
-body.ethereum-page .dataset-download,
 body.gnosis-page .dataset-download {
   background: linear-gradient(135deg, rgba(0, 223, 207, 0.12), rgba(17, 102, 255, 0.06));
   border: 1px solid rgba(0, 223, 207, 0.25);
@@ -469,7 +513,6 @@ body.gnosis-page .dataset-download {
   align-items: center;
 }
 
-body.ethereum-page .dataset-download__headline,
 body.gnosis-page .dataset-download__headline {
   margin: 0;
   font-size: 22px;
@@ -480,7 +523,6 @@ body.gnosis-page .dataset-download__headline {
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-body.ethereum-page .dataset-download__link,
 body.gnosis-page .dataset-download__link {
   display: inline-flex;
   align-items: center;
@@ -497,20 +539,17 @@ body.gnosis-page .dataset-download__link {
   box-shadow: 0 10px 20px rgba(0, 34, 51, 0.28);
 }
 
-body.ethereum-page .dataset-download__link:hover,
 body.gnosis-page .dataset-download__link:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 26px rgba(0, 34, 51, 0.38);
   background: linear-gradient(135deg, #03aaa0, #0f6fd6);
 }
 
-body.ethereum-page .dataset-download__link:focus-visible,
 body.gnosis-page .dataset-download__link:focus-visible {
   outline: 3px solid rgba(255, 255, 255, 0.75);
   outline-offset: 4px;
 }
 
-body.ethereum-page .dataset-download__link--disabled,
 body.gnosis-page .dataset-download__link--disabled {
   background: linear-gradient(135deg, #024a47, #0b3f7a);
   color: #88dce0;
@@ -519,7 +558,6 @@ body.gnosis-page .dataset-download__link--disabled {
   box-shadow: 0 6px 14px rgba(0, 34, 51, 0.25);
 }
 
-body.ethereum-page .dataset-download__note,
 body.gnosis-page .dataset-download__note {
   margin: 0;
   font-size: 15px;
@@ -527,7 +565,6 @@ body.gnosis-page .dataset-download__note {
 }
 
 /* Style pour la section README */
-body.ethereum-page .readme-info,
 body.gnosis-page .readme-info {
   background: linear-gradient(135deg, rgba(0, 223, 207, 0.12), rgba(17, 102, 255, 0.06));
   padding: 25px 30px;
@@ -537,7 +574,6 @@ body.gnosis-page .readme-info {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-body.ethereum-page .readme-info h4,
 body.gnosis-page .readme-info h4 {
   color: #00dfcf;
   margin: 0 0 15px 0;
@@ -545,54 +581,27 @@ body.gnosis-page .readme-info h4 {
   font-weight: 600;
 }
 
-body.ethereum-page .readme-info ul,
 body.gnosis-page .readme-info ul {
   margin: 15px 0;
 }
 
-body.ethereum-page .readme-info__link,
 body.gnosis-page .readme-info__link {
   margin: 20px 0 0 0;
   font-size: 16px;
   color: #e8fdfb;
 }
 
-body.ethereum-page .readme-info__link a,
 body.gnosis-page .readme-info__link a {
   color: #00dfcf;
   text-decoration: underline;
   font-weight: 600;
 }
 
-body.ethereum-page .readme-info__link a:hover,
 body.gnosis-page .readme-info__link a:hover {
   color: #1166ff;
 }
 
-body.ethereum-page .readme-info__placeholder,
 body.gnosis-page .readme-info__placeholder {
   color: #9cd7d3;
   font-style: italic;
-}
-
-body.ethereum-page .readme-info li {
-  margin: 8px 0;
-  font-size: 15px;
-  color: #e0e0e0;
-  text-align: left;
-}
-
-body.ethereum-page .readme-info li:before {
-  content: "•";
-  color: #00dfcf;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-}
-
-/* Style pour le texte final */
-body.ethereum-page em {
-  color: #00dfcf;
-  font-style: italic;
-  font-size: 15px;
 }
