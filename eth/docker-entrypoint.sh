@@ -3,7 +3,9 @@
 cd /app/eth || exit 1
 
 # RPC
-RPC=${RPC:-"https://ethereum-rpc.publicnode.com"}
+# RPC=${RPC:-"https://ethereum-rpc.publicnode.com"} 
+
+RPC=${RPC:-"http://172.30.122.3:8545"}
 export RPC
 
 # Gérer le paramètre d'intervalle en jours
