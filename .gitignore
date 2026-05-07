@@ -29,5 +29,8 @@ Thumbs.db
 .idea/
 *.swp
 
+# Notes d'exploitation locales
+CLAUDE.md
+
 # Ignorer les fichiers de conteneur Docker inutiles
 docker-compose.override.yml
