@@ -22,6 +22,8 @@ mkdir -p "$LOG_DIR"
 # Nom du fichier de log avec timestamp
 LOG_FILE="$LOG_DIR/update_$(date +"%Y%m%d_%H%M%S").log"
 
+# Nettoyage des logs de plus de 30 jours
+find "$LOG_DIR" -name "*.log" -mtime +30 -delete && echo "[INFO] Anciens logs (>30j) supprimés." || true
 
 echo "=== Démarrage du script update.sh ($(date)) ===" | tee -a "$LOG_FILE"
 # Rediriger stdout et stderr vers le fichier de log (tout en conservant l'affichage)
@@ -38,7 +40,7 @@ LAST_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_eth_usd_last.csv"
 git checkout main
 git reset --hard
 git clean -fd
-git pull --rebase origin main
+git pull --rebase origin main || echo "[WARNING] git pull --rebase a échoué, poursuite de la collecte sans mise à jour distante."
 
 # Afficher info RPC
 if [[ -z "$RPC" ]]; then
@@ -191,9 +193,8 @@ fi
 # 11. Commit & Push du README mis-à-jour sur Github
 
 git add README.md
-git commit -m "Update data"
-
-git push origin main
+git commit -m "Update data" || echo "[WARNING] Rien à committer ou échec du commit."
+git push origin main || echo "[WARNING] git push échoué (clé SSH ?). Données mises à jour localement."
 
 # Fin du script
 sleep 3
