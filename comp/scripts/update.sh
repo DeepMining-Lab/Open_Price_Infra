@@ -133,7 +133,7 @@ echo "[INFO] Generate_readme terminé"
 MAX=5
 for i in $(seq 1 $MAX); do
   echo "[INFO] Tentative #$i..."
-  scp data/{chainlink_comp_usd.csv,uniswap_comp_usd.csv} debian@extract.lan.text-analytics.ch:/data/comp/prices && break
+  scp data/{chainlink_comp_usd.csv,uniswap_comp_usd.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices && break
   echo "[WARNING] Échec SCP (code : $?). Nouvelle tentative dans 3s." >&2
   sleep 3
 done
