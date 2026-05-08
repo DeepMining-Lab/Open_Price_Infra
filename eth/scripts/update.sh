@@ -59,21 +59,21 @@ echo "[INFO] Fichier de données: $DATA_FILE_CHAINLINK"
 
 # 2. Récupérer et ajouter +1 seconde à la date de dernière modif des CSVs
 
-# Extraire le champ “timestamp” de la dernière ligne des CSVs
-last_iso_uniswap=$(tail -n 1 “$DATA_FILE_UNISWAP” | cut -d',' -f1)
-if [[ “$last_iso_uniswap” == “timestamp” ]] || [[ -z “$last_iso_uniswap” ]]; then
+# Extraire le champ "timestamp" de la dernière ligne des CSVs
+last_iso_uniswap=$(tail -n 1 "$DATA_FILE_UNISWAP" | cut -d',' -f1)
+if [[ "$last_iso_uniswap" == "timestamp" ]] || [[ -z "$last_iso_uniswap" ]]; then
   start_ts_uniswap=1546300800
-  echo “[INFO] CSV Uniswap vide, démarrage depuis la date par défaut.”
+  echo "[INFO] CSV Uniswap vide, démarrage depuis la date par défaut."
 else
-  start_ts_uniswap=$(( $(date -d “$last_iso_uniswap” +”%s”) + 1 ))
+  start_ts_uniswap=$(( $(date -d "$last_iso_uniswap" +"%s") + 1 ))
 fi
 
-last_iso_chainlink=$(tail -n 1 “$DATA_FILE_CHAINLINK” | cut -d',' -f4)
-if [[ “$last_iso_chainlink” == “datetime_utc” ]] || [[ -z “$last_iso_chainlink” ]]; then
+last_iso_chainlink=$(tail -n 1 "$DATA_FILE_CHAINLINK" | cut -d',' -f4)
+if [[ "$last_iso_chainlink" == "datetime_utc" ]] || [[ -z "$last_iso_chainlink" ]]; then
   start_ts_chainlink=1546300800
-  echo “[INFO] CSV Chainlink vide, démarrage depuis la date par défaut.”
+  echo "[INFO] CSV Chainlink vide, démarrage depuis la date par défaut."
 else
-  start_ts_chainlink=$(( $(date -d “$last_iso_chainlink” +”%s”) + 1 ))
+  start_ts_chainlink=$(( $(date -d "$last_iso_chainlink" +"%s") + 1 ))
 fi
 
 echo "[INFO] Timestamp de démarrage pour Uniswap (dernière date +1s) : $start_ts_uniswap"
