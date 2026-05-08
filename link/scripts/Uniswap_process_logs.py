@@ -34,7 +34,7 @@ def decode_swap_event(data_hex):
         amount0 = int.from_bytes(bytes.fromhex(amount0_hex), byteorder='big', signed=True)
         amount1 = int.from_bytes(bytes.fromhex(amount1_hex), byteorder='big', signed=True)
         sqrtPriceX96 = int(sqrtPriceX96_hex, 16)
-                link_amount = mp.mpf(amount0) / 10**18   # LINK a 18 décimales (token0)
+        link_amount = mp.mpf(amount0) / 10**18   # LINK a 18 décimales (token0)
         usdc_amount  = mp.mpf(amount1) / 10**6    # USDC a 6 décimales (token1)
         return usdc_amount, link_amount, sqrtPriceX96
     except Exception as e:
@@ -45,7 +45,7 @@ def decode_swap_event(data_hex):
 
 def calculate_price(sqrtPriceX96, link_amount, usdc_amount):
     try:
-                sqrtPriceX96 = mp.mpf(sqrtPriceX96)
+        sqrtPriceX96 = mp.mpf(sqrtPriceX96)
         sqrt_price = sqrtPriceX96 / (2 ** 96)
         # sqrtP = sqrt(USDC_raw / LINK_raw) → price_usdc_per_link_raw = sqrt_price²
         # Ajustement décimales : LINK=18 dec, USDC=6 dec → ×1e12
