@@ -25,11 +25,6 @@ OUTPUT_DIR="$PROJECT_DIR/data/output"
 LAST_FILE_UNISWAP="$PROJECT_DIR/data/uniswap_link_usd_last.csv"
 LAST_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_link_usd_last.csv"
 
-git checkout main
-git reset --hard origin/main
-git clean -fd
-git pull --rebase origin main || echo "[WARNING] git pull --rebase a échoué, poursuite de la collecte sans mise à jour distante."
-
 if [[ -z "$RPC" ]]; then
   echo "WARNING: La variable RPC n'est pas définie." >&2
 else
