@@ -38,7 +38,7 @@ LAST_FILE_UNISWAP="$PROJECT_DIR/data/uniswap_eth_usd_last.csv"
 LAST_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_eth_usd_last.csv"
 
 git checkout main
-git reset --hard
+git reset --hard origin/main
 git clean -fd
 git pull --rebase origin main || echo "[WARNING] git pull --rebase a échoué, poursuite de la collecte sans mise à jour distante."
 
@@ -182,16 +182,18 @@ echo "[INFO] Generate_readme terminé"
 # 10. SCP dans Filebrowser des data
 
 MAX=5
-
+SCP_OK=false
 for i in $(seq 1 $MAX); do
   echo "[INFO] Tentative #$i..."
-  scp data/{chainlink_eth_usd.csv,uniswap_eth_usd.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices && break
-  echo "[WARNING] Échec (code : $?). Nouvelle tentative dans 3s." >&2
+  if scp data/{chainlink_eth_usd.csv,uniswap_eth_usd.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices; then
+    SCP_OK=true
+    break
+  fi
+  echo "[WARNING] Échec SCP (code : $?). Nouvelle tentative dans 3s." >&2
   sleep 3
 done
 
-
-if [ $i -le $MAX ]; then
+if $SCP_OK; then
   echo "[INFO] Transfert réussi à la tentative #$i."
 else
   echo "[ERROR] Impossible de transférer après $MAX tentatives." >&2
@@ -203,6 +205,7 @@ fi
 
 git add README.md
 git commit -m "Update data" || echo "[WARNING] Rien à committer ou échec du commit."
+git pull --rebase origin main || echo "[WARNING] git pull --rebase avant push a échoué."
 git push origin main || echo "[WARNING] git push échoué (clé SSH ?). Données mises à jour localement."
 
 # Fin du script
