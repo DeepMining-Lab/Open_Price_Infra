@@ -7,8 +7,8 @@ Open Price AAVE is an open-data initiative providing a standardized, continuousl
 
 | Dataset                    | End Date Available              | CSV File                                      |
 |----------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink AAVE/USD**  | 2026-05-09 06:55:59 UTC      | `data/chainlink_aave_usd.csv`                |
-| **Uniswap V3 AAVE/USDC**| 2026-03-23 13:30:35 UTC        | `data/uniswap_aave_usd.csv`                  |
+| **Chainlink AAVE/USD**  | 2026-05-10 07:02:23 UTC      | `data/chainlink_aave_usd.csv`                |
+| **Uniswap V3 AAVE/USDC**| 2026-05-05 17:17:59 UTC        | `data/uniswap_aave_usd.csv`                  |
 
 ---
 
