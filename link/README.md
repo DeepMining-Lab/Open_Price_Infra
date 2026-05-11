@@ -7,8 +7,8 @@ Open Price LINK is an open-data initiative providing a standardized, continuousl
 
 | Dataset                    | End Date Available              | CSV File                                      |
 |----------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink LINK/USD**  | 2026-05-10 07:03:35 UTC      | `data/chainlink_link_usd.csv`                |
-| **Uniswap V3 LINK/USDC**| 2026-04-14 05:56:23 UTC        | `data/uniswap_link_usd.csv`                  |
+| **Chainlink LINK/USD**  | 2026-05-11 07:43:35 UTC      | `data/chainlink_link_usd.csv`                |
+| **Uniswap V3 LINK/USDC**| 2026-04-20 15:27:47 UTC        | `data/uniswap_link_usd.csv`                  |
 
 ---
 
