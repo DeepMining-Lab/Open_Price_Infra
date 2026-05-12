@@ -7,8 +7,8 @@ Open Price UNI is an open-data initiative providing a standardized, continuously
 
 | Dataset                    | End Date Available              | CSV File                                      |
 |----------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink UNI/USD**  | 2026-05-11 06:43:59 UTC      | `data/chainlink_uni_usd.csv`                |
-| **Uniswap V3 UNI/USDC**| 2026-04-26 05:19:23 UTC        | `data/uniswap_uni_usd.csv`                  |
+| **Chainlink UNI/USD**  | 2026-05-12 07:11:47 UTC      | `data/chainlink_uni_usd.csv`                |
+| **Uniswap V3 UNI/USDC**| 2026-05-06 15:03:47 UTC        | `data/uniswap_uni_usd.csv`                  |
 
 ---
 
