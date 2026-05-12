@@ -135,7 +135,7 @@ def process_uniswap_logs(csv_path, web3):
         return pd.DataFrame()
 
 
-def main(output_filename='uniswap_link_usd_last.csv'):
+def main(output_filename='link_usdc_uniswap_v3_03_last.csv'):
     if not csv_files:
         print("Aucun fichier CSV trouvé dans le dossier 'output'")
         return None

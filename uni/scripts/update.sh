@@ -19,10 +19,10 @@ find "$LOG_DIR" -name "*.log" -mtime +30 -delete && echo "[INFO] Anciens logs (>
 echo "=== Démarrage du script update.sh ($(date)) ===" | tee -a "$LOG_FILE"
 exec > >(awk '{ print strftime("%Y-%m-%d %H:%M:%S"), "-", $0; fflush(); }' | tee -a "$LOG_FILE") 2>&1
 
-DATA_FILE_UNISWAP="$PROJECT_DIR/data/uniswap_uni_usd.csv"
+DATA_FILE_UNISWAP="$PROJECT_DIR/data/uni_usdc_uniswap_v3_03.csv"
 DATA_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_uni_usd.csv"
 OUTPUT_DIR="$PROJECT_DIR/data/output"
-LAST_FILE_UNISWAP="$PROJECT_DIR/data/uniswap_uni_usd_last.csv"
+LAST_FILE_UNISWAP="$PROJECT_DIR/data/uni_usdc_uniswap_v3_03_last.csv"
 LAST_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_uni_usd_last.csv"
 
 if [[ -z "$RPC" ]]; then
@@ -129,7 +129,7 @@ MAX=5
 SCP_OK=false
 for i in $(seq 1 $MAX); do
   echo "[INFO] Tentative #$i..."
-  if scp data/{chainlink_uni_usd.csv,uniswap_uni_usd.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices; then
+  if scp data/{chainlink_uni_usd.csv,uni_usdc_uniswap_v3_03.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices; then
     SCP_OK=true
     break
   fi

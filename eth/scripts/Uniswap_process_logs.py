@@ -196,7 +196,7 @@ def process_uniswap_logs(csv_path, web3):
         print(f"Erreur générale dans process_uniswap_logs: {e}")
         return pd.DataFrame()
 
-def main(output_filename='uniswap_eth_usd_last.csv'):
+def main(output_filename='eth_usdc_uniswap_v3_005_last.csv'):
     """
     Fonction principale pour traiter tous les fichiers CSV du dossier output
     """

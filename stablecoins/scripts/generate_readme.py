@@ -8,7 +8,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, TemplateError
 
-def get_last_csv_timestamp(path, col_name, datetime_format=None, tz_aware=False):
+def get_last_csv_timestamp(
+    path: Path,
+    col_name: str,
+    datetime_format: str | None = None,
+    tz_aware: bool = False
+) -> datetime | str | None:
     try:
         with path.open(newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -32,9 +37,13 @@ def get_last_csv_timestamp(path, col_name, datetime_format=None, tz_aware=False)
         try:
             dt = datetime.strptime(last_value, datetime_format)
         except ValueError as e:
-            logging.error("Impossible de parser '%s' avec le format '%s' : %s", last_value, datetime_format, e)
+            logging.error(
+                "Impossible de parser '%s' avec le format '%s' : %s",
+                last_value, datetime_format, e
+            )
             return None
         return dt if tz_aware else dt.replace(tzinfo=None)
+
     return last_value
 
 TEMPLATE_DIR = Path(__file__).parent
@@ -42,21 +51,21 @@ TEMPLATE_NAME = "README.tpl.md"
 OUTPUT_PATH = TEMPLATE_DIR.parent / "README.md"
 
 data_info = {
-    "chainlink": {
-        "path": TEMPLATE_DIR.parent / "data" / "chainlink_uni_usd.csv",
+    "usdc": {
+        "path": TEMPLATE_DIR.parent / "data" / "chainlink_usdc_usd.csv",
         "col_name": "datetime_utc",
-        "fmt": "%Y-%m-%d %H:%M:%S%z",
-        "tz_aware": True,
+        "fmt": "%Y-%m-%d %H:%M:%S",
+        "tz_aware": False,
     },
-    "uniswap": {
-        "path": TEMPLATE_DIR.parent / "data" / "uni_usdc_uniswap_v3_03.csv",
-        "col_name": "timestamp",
-        "fmt": "%Y-%m-%d %H:%M:%S%z",
-        "tz_aware": True,
+    "usdt": {
+        "path": TEMPLATE_DIR.parent / "data" / "chainlink_usdt_usd.csv",
+        "col_name": "datetime_utc",
+        "fmt": "%Y-%m-%d %H:%M:%S",
+        "tz_aware": False,
     },
 }
 
-context = {}
+context: dict[str, dict[str, str]] = {}
 for name, info in data_info.items():
     last_ts = get_last_csv_timestamp(
         info["path"],
@@ -64,17 +73,19 @@ for name, info in data_info.items():
         datetime_format=info.get("fmt"),
         tz_aware=info.get("tz_aware", False)
     )
+
     if isinstance(last_ts, datetime):
-        if name == "chainlink":
-            display_ts = last_ts.strftime("%Y-%m-%d %H:%M:%S") + " UTC"
-        else:
-            display_ts = last_ts.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
+        display_ts = last_ts.strftime("%Y-%m-%d %H:%M:%S") + " UTC"
     else:
         display_ts = last_ts or "N/A"
+
     context[name] = {"extraction": display_ts}
 
 try:
-    env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)), keep_trailing_newline=True)
+    env = Environment(
+        loader=FileSystemLoader(str(TEMPLATE_DIR)),
+        keep_trailing_newline=True
+    )
     template = env.get_template(TEMPLATE_NAME)
     rendered = template.render(**context)
     OUTPUT_PATH.write_text(rendered, encoding='utf-8')

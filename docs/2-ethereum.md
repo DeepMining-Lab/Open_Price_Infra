@@ -47,7 +47,7 @@ page_class: ethereum-page
     {
       "@type": "DataDownload",
       "name": "Uniswap V3 ETH/USDC CSV",
-      "contentUrl": "https://files.deepmining.ch/files/ethereum/prices/uniswap_eth_usd.csv",
+      "contentUrl": "https://files.deepmining.ch/files/ethereum/prices/eth_usdc_uniswap_v3_005.csv",
       "encodingFormat": "text/csv",
       "description": "Historical ETH/USDC swap data from the Uniswap V3 WETH/USDC pool on Ethereum."
     }
@@ -493,7 +493,7 @@ page_class: ethereum-page
     <span class="eyebrow">Ethereum datasets</span>
     <h1>Open Prices — Ethereum</h1>
     <p class="hero-copy">The datasets below provide open, reproducible market data for research and engineering on Ethereum.</p>
-    <p class="hero-copy">The datasets are updated daily and you will always have access to the latest available version. The dataset named <span class="dataset-file-name">chainlink_eth_usd.csv</span> contains the complete price history from the Chainlink contract on Ethereum Mainnet, while the CSV <span class="dataset-file-name">uniswap_eth_usd.csv</span> contains all swap events recorded on the Uniswap V3 WETH/USDC contract.</p>
+    <p class="hero-copy">The datasets are updated daily and you will always have access to the latest available version. The dataset named <span class="dataset-file-name">chainlink_eth_usd.csv</span> contains the complete price history from the Chainlink contract on Ethereum Mainnet, while the CSV <span class="dataset-file-name">eth_usdc_uniswap_v3_005.csv</span> contains all swap events recorded on the Uniswap V3 WETH/USDC contract.</p>
     <div class="cta-group">
       <a class="cta-primary" href="https://files.deepmining.ch/files/ethereum/prices/" target="_blank" rel="noopener">
         Download Ethereum price CSVs
@@ -515,7 +515,7 @@ page_class: ethereum-page
         <h3><span class="dataset-icon" aria-hidden="true">🦄</span><span>Uniswap V3 ETH/USDC</span></h3>
         <p>Swap events captured from the Uniswap V3 WETH/USDC pool on Ethereum.</p>
         <p>Market microstructure preserved for volatility and slippage studies.</p>
-        <p><strong>File name :</strong><span class="dataset-file-name-inline">uniswap_eth_usd.csv</span></p>
+        <p><strong>File name :</strong><span class="dataset-file-name-inline">eth_usdc_uniswap_v3_005.csv</span></p>
       </div>
     </div>
   </section>

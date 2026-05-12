@@ -49,7 +49,7 @@ data_info = {
         "tz_aware": True,
     },
     "uniswap": {
-        "path": TEMPLATE_DIR.parent / "data" / "uniswap_aave_usd.csv",
+        "path": TEMPLATE_DIR.parent / "data" / "aave_usdc_uniswap_v3_03.csv",
         "col_name": "timestamp",
         "fmt": "%Y-%m-%d %H:%M:%S%z",
         "tz_aware": True,

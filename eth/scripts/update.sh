@@ -31,10 +31,10 @@ exec > >(awk '{ print strftime("%Y-%m-%d %H:%M:%S"), "-", $0; fflush(); }' | tee
 
 
 # Chemins absolus
-DATA_FILE_UNISWAP="$PROJECT_DIR/data/uniswap_eth_usd.csv"
+DATA_FILE_UNISWAP="$PROJECT_DIR/data/eth_usdc_uniswap_v3_005.csv"
 DATA_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_eth_usd.csv"
 OUTPUT_DIR="$PROJECT_DIR/data/output"
-LAST_FILE_UNISWAP="$PROJECT_DIR/data/uniswap_eth_usd_last.csv"
+LAST_FILE_UNISWAP="$PROJECT_DIR/data/eth_usdc_uniswap_v3_005_last.csv"
 LAST_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_eth_usd_last.csv"
 
 # Afficher info RPC
@@ -136,7 +136,7 @@ if ! rm -rf "$OUTPUT_DIR"/*; then
 fi
 
 
-# 7. Concaténer uniswap_eth_usd_last.csv dans uniswap_eth_usd.csv et chainlink_eth_usd_last.csv dans chainlink_eth_usd.csv
+# 7. Concaténer eth_usdc_uniswap_v3_005_last.csv dans eth_usdc_uniswap_v3_005.csv et chainlink_eth_usd_last.csv dans chainlink_eth_usd.csv
 if [[ -f "$LAST_FILE_UNISWAP" ]]; then
   echo "[INFO] Concaténation de $LAST_FILE_UNISWAP dans $DATA_FILE_UNISWAP"
   tail -n +2 "$LAST_FILE_UNISWAP" >> "$DATA_FILE_UNISWAP"
@@ -180,7 +180,7 @@ MAX=5
 SCP_OK=false
 for i in $(seq 1 $MAX); do
   echo "[INFO] Tentative #$i..."
-  if scp data/{chainlink_eth_usd.csv,uniswap_eth_usd.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices; then
+  if scp data/{chainlink_eth_usd.csv,eth_usdc_uniswap_v3_005.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices; then
     SCP_OK=true
     break
   fi

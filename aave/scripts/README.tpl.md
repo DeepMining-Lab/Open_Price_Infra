@@ -8,7 +8,7 @@ Open Price AAVE is an open-data initiative providing a standardized, continuousl
 | Dataset                    | End Date Available              | CSV File                                      |
 |----------------------------|---------------------------------|-----------------------------------------------|
 | **Chainlink AAVE/USD**  | {{ chainlink.extraction }}      | `data/chainlink_aave_usd.csv`                |
-| **Uniswap V3 AAVE/USDC**| {{ uniswap.extraction }}        | `data/uniswap_aave_usd.csv`                  |
+| **Uniswap V3 AAVE/USDC**| {{ uniswap.extraction }}        | `data/aave_usdc_uniswap_v3_03.csv`                  |
 
 ---
 
@@ -22,7 +22,7 @@ Open Price AAVE is an open-data initiative providing a standardized, continuousl
 | `datetime_utc`     | string  | Update timestamp in `YYYY-MM-DD HH:MM:SS` format (UTC)                   |
 | `price`            | float   | AAVE/USD price (scaled by 10⁸ in the contract)                       |
 
-## 🗂 CSV Structure: `uniswap_aave_usd.csv`
+## 🗂 CSV Structure: `aave_usdc_uniswap_v3_03.csv`
 
 | Column                     | Type    | Description                                        |
 |----------------------------|---------|----------------------------------------------------|

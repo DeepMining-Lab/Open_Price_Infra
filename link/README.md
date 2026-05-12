@@ -8,7 +8,7 @@ Open Price LINK is an open-data initiative providing a standardized, continuousl
 | Dataset                    | End Date Available              | CSV File                                      |
 |----------------------------|---------------------------------|-----------------------------------------------|
 | **Chainlink LINK/USD**  | 2026-05-12 07:03:11 UTC      | `data/chainlink_link_usd.csv`                |
-| **Uniswap V3 LINK/USDC**| 2026-05-06 15:46:47 UTC        | `data/uniswap_link_usd.csv`                  |
+| **Uniswap V3 LINK/USDC**| 2026-05-06 15:46:47 UTC        | `data/link_usdc_uniswap_v3_03.csv`                  |
 
 ---
 
@@ -22,7 +22,7 @@ Open Price LINK is an open-data initiative providing a standardized, continuousl
 | `datetime_utc`     | string  | Update timestamp in `YYYY-MM-DD HH:MM:SS` format (UTC)                   |
 | `price`            | float   | LINK/USD price (scaled by 10⁸ in the contract)                       |
 
-## 🗂 CSV Structure: `uniswap_link_usd.csv`
+## 🗂 CSV Structure: `link_usdc_uniswap_v3_03.csv`
 
 | Column                     | Type    | Description                                        |
 |----------------------------|---------|----------------------------------------------------|

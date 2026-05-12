@@ -8,7 +8,7 @@ Open Price ETH is an open-data initiative providing a standardized, continuously
 | Dataset                | Start Date Available       | End Date Available     | CSV File                                          |
 |------------------------|----------------------------|------------------------|---------------------------------------------------|
 | **Chainlink ETH/USD**  | 2020-08-07 11:28:13 UTC    | {{ chainlink.extraction      }}| `data/chainlink_eth_usd.csv`                      |    
-| **Uniswap V3 ETH/USDC**| 2021-05-05 22:15:01 UTC    | {{ uniswap.extraction    }}| `data/uniswap_eth_usd.csv`                        | 
+| **Uniswap V3 ETH/USDC**| 2021-05-05 22:15:01 UTC    | {{ uniswap.extraction    }}| `data/eth_usdc_uniswap_v3_005.csv`                        | 
 
 Extraction date and time are taken from the CSV file’s last modification timestamp.
 
@@ -29,7 +29,7 @@ This file contains hourly Ether prices in USD from the Chainlink oracle on the E
 | `price`            | float   | ETH/USD price (converted from the integer returned by Chainlink, which is scaled by 10⁸)        |
 
 
-## 🗂 CSV Structure: `uniswap_eth_usd.csv`
+## 🗂 CSV Structure: `eth_usdc_uniswap_v3_005.csv`
 
 | Column               | Type    | Description                                                                                   |
 |----------------------|---------|-----------------------------------------------------------------------------------------------|
@@ -149,7 +149,7 @@ volume_usdc = abs(usdc_amount) + abs(eth_amount * price_usdc_per_eth)
 
 ## 6. Result Aggregation
 
-Collect and export to `data/uniswap_eth_usd.csv` with columns:
+Collect and export to `data/eth_usdc_uniswap_v3_005.csv` with columns:
 - timestamp
 - price_usdc_per_eth
 - usdc_amount
