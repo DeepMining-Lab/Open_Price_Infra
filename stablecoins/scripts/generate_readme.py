@@ -54,13 +54,13 @@ data_info = {
     "usdc": {
         "path": TEMPLATE_DIR.parent / "data" / "chainlink_usdc_usd.csv",
         "col_name": "datetime_utc",
-        "fmt": "%Y-%m-%d %H:%M:%S",
+        "fmt": "%Y-%m-%d %H:%M:%S+00:00",
         "tz_aware": False,
     },
     "usdt": {
         "path": TEMPLATE_DIR.parent / "data" / "chainlink_usdt_usd.csv",
         "col_name": "datetime_utc",
-        "fmt": "%Y-%m-%d %H:%M:%S",
+        "fmt": "%Y-%m-%d %H:%M:%S+00:00",
         "tz_aware": False,
     },
 }
