@@ -84,7 +84,7 @@ def calculate_price(sqrtPriceX96, comp_amount, usdc_amount):
         # USDC est token0, COMP est token1 → prix = 1 / (sqrtP² × 1e-12)
         price_comp_per_usdc_adj = sqrt_price ** 2 * mp.mpf("1e-12")
         price_usdc_per_comp = 1 / price_comp_per_usdc_adj
-        volume_usdc = abs(usdc_amount) + abs(comp_amount * price_usdc_per_comp)
+        volume_usdc = abs(usdc_amount)
         return price_usdc_per_comp, volume_usdc
     except Exception as e:
         print(f"Erreur dans calculate_price: {e}")
@@ -150,6 +150,10 @@ def process_uniswap_logs(csv_path, web3):
             return pd.DataFrame()
 
         # Passe 1 : décodage des events + timestamps
+        df = df.sort_values(["block_number", "log_index"], ignore_index=True)
+
+        chain_id_rpc = web3.eth.chain_id
+
         block_numbers = list(set(df['block_number'].tolist()))
         print(f"Blocs uniques à récupérer : {len(block_numbers)}")
 
@@ -173,6 +177,11 @@ def process_uniswap_logs(csv_path, web3):
                     print("topic0 inattendu, ignoré.")
                     continue
 
+                log_address = str(row.get("address", "")).lower()
+                if log_address and log_address != POOL_ADDRESS.lower():
+                    print(f"pool_address inattendue ({log_address}), ignorée.")
+                    continue
+
                 usdc_amount, comp_amount, sqrtPriceX96, liquidity, tick = decode_swap_event(row['data'])
                 price, volume = calculate_price(sqrtPriceX96, comp_amount, usdc_amount)
                 timestamp = blocks.get(row['block_number'])
@@ -193,7 +202,7 @@ def process_uniswap_logs(csv_path, web3):
                     'log_index':           row.get('log_index'),
                     'pool_address':        row.get('address', POOL_ADDRESS),
                     'pool_fee_tier':       POOL_FEE_TIER,
-                    'chain_id':            row.get('chain_id'),
+                    'chain_id':            row.get('chain_id', chain_id_rpc),
                     'sqrt_price_x96':      sqrtPriceX96,
                     'liquidity':           liquidity,
                     'tick':                tick,
