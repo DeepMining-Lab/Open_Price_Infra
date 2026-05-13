@@ -5,10 +5,13 @@ Open Price ETH is an open-data initiative providing a standardized, continuously
 
 ## 📅 Available Datasets
 
-| Dataset                    | End Date Available              | CSV File                                      |
-|----------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink ETH/USD**   | {{ chainlink.extraction }}      | `data/chainlink_eth_usd.csv`                  |
-| **Uniswap V3 ETH/USDC** | {{ uniswap.extraction }}        | `data/eth_usdc_uniswap_v3_005.csv`            |
+| Dataset                          | End Date Available              | CSV File                                      |
+|----------------------------------|---------------------------------|-----------------------------------------------|
+| **Chainlink ETH/USD**         | {{ chainlink.extraction }}      | `data/chainlink_eth_usd.csv`                  |
+| **Uniswap V3 ETH/USDC**      | {{ uniswap.extraction }}        | `data/eth_usdc_uniswap_v3_005.csv`            |
+| **Uniswap V2 WETH/USDC**     | N/A                             | `data/weth_usdc_uniswap_v2_03.csv`            |
+| **Uniswap V2 WETH/USDT**     | N/A                             | `data/weth_usdt_uniswap_v2_03.csv`            |
+| **Curve crvUSD/WETH**        | N/A                             | `data/crvusd_weth_curve.csv`                  |
 
 ---
 
@@ -42,6 +45,72 @@ Open Price ETH is an open-data initiative providing a standardized, continuously
 | `tick`                | int24   | Current tick of the pool at the time of the swap                                             |
 | `pool_tvl_at_block`   | float   | Total Value Locked in USD at the swap block (USDC balance + WETH balance × price)           |
 | `slip_1k`             | float   | Simulated cost of a 1 000 USDC→WETH swap: price impact + fee tier (via QuoterV2). `None` for pre-2022 blocks (QuoterV2 not yet deployed). |
+
+## 🗂 CSV Structure: `weth_usdc_uniswap_v2_03.csv`
+
+Uniswap V2 WETH/USDC pool (USDC=token0, WETH=token1). Price from swap amounts; reserves from `getReserves()`. `slip_1k` simulates buying WETH with 1 000 USDC.
+
+| Column                | Type    | Description                                                                                  |
+|-----------------------|---------|----------------------------------------------------------------------------------------------|
+| `timestamp`           | string  | UTC timestamp of the block                                                                   |
+| `price_usdc_per_eth`  | float   | Effective ETH price in USDC from swap amounts (`\|USDC_net\| / \|WETH_net\|`)                |
+| `usdc_amount`         | float   | USDC net flow (positive = into pool)                                                         |
+| `eth_amount`          | float   | WETH net flow (positive = into pool)                                                         |
+| `volume_usdc`         | float   | Trade notional in USDC — `abs(usdc_amount)`                                                  |
+| `block_number`        | int     | Ethereum block number                                                                        |
+| `transaction_hash`    | string  | Transaction hash                                                                             |
+| `log_index`           | int     | Log index within the block                                                                   |
+| `pool_address`        | string  | Pool contract address                                                                        |
+| `pool_fee_tier`       | int     | Pool fee tier (3000 = 0.3%)                                                                  |
+| `chain_id`            | int     | Ethereum chain ID (1 = mainnet)                                                              |
+| `reserve0`            | uint112 | Raw token0 (USDC) reserve at the swap block                                                  |
+| `reserve1`            | uint112 | Raw token1 (WETH) reserve at the swap block                                                  |
+| `pool_tvl_at_block`   | float   | Total Value Locked in USD (USDC reserve + WETH reserve × price)                              |
+| `slip_1k`             | float   | Simulated cost of a 1 000 USDC→WETH swap using the V2 analytical formula                    |
+
+## 🗂 CSV Structure: `weth_usdt_uniswap_v2_03.csv`
+
+Uniswap V2 WETH/USDT pool (WETH=token0, USDT=token1). `slip_1k` simulates buying WETH with 1 000 USDT.
+
+| Column                | Type    | Description                                                                                  |
+|-----------------------|---------|----------------------------------------------------------------------------------------------|
+| `timestamp`           | string  | UTC timestamp of the block                                                                   |
+| `price_usdt_per_eth`  | float   | Effective ETH price in USDT from swap amounts (`\|USDT_net\| / \|WETH_net\|`)                |
+| `eth_amount`          | float   | WETH net flow (positive = into pool)                                                         |
+| `usdt_amount`         | float   | USDT net flow (positive = into pool)                                                         |
+| `volume_usdt`         | float   | Trade notional in USDT — `abs(usdt_amount)`                                                  |
+| `block_number`        | int     | Ethereum block number                                                                        |
+| `transaction_hash`    | string  | Transaction hash                                                                             |
+| `log_index`           | int     | Log index within the block                                                                   |
+| `pool_address`        | string  | Pool contract address                                                                        |
+| `pool_fee_tier`       | int     | Pool fee tier (3000 = 0.3%)                                                                  |
+| `chain_id`            | int     | Ethereum chain ID (1 = mainnet)                                                              |
+| `reserve0`            | uint112 | Raw token0 (WETH) reserve at the swap block                                                  |
+| `reserve1`            | uint112 | Raw token1 (USDT) reserve at the swap block                                                  |
+| `pool_tvl_at_block`   | float   | Total Value Locked in USD (USDT reserve + WETH reserve × price)                              |
+| `slip_1k`             | float   | Simulated cost of a 1 000 USDT→WETH swap using the V2 analytical formula                    |
+
+---
+
+## 🗂 CSV Structure: `crvusd_weth_curve.csv`
+
+Curve pool `0x6e5492f8Ea2370844eE098a56dD88e1717E4A9C2` — coin0=crvUSD (18 dec), coin1=WETH (18 dec).
+Price derived from `TokenExchange` event amounts. TVL in crvUSD (≈ USD). `slip_1k` simulates buying WETH with 1 000 crvUSD via `get_dy()`.
+
+| Column                   | Type   | Description                                                                                |
+|--------------------------|--------|--------------------------------------------------------------------------------------------|
+| `timestamp`              | string | UTC timestamp of the block, e.g. `2024-04-19 23:59:59+00:00`                              |
+| `price_weth_per_crvusd`  | float  | crvUSD price in WETH from swap amounts (`\|WETH_net\| / \|crvUSD_net\|`)                   |
+| `crvusd_amount`          | float  | crvUSD net flow (positive = into pool, negative = out of pool)                             |
+| `weth_amount`            | float  | WETH net flow (positive = into pool, negative = out of pool)                               |
+| `volume_crvusd`          | float  | Trade notional in crvUSD — `abs(crvusd_amount)`                                            |
+| `block_number`           | int    | Ethereum block number                                                                      |
+| `transaction_hash`       | string | Transaction hash                                                                           |
+| `log_index`              | int    | Log index within the block                                                                 |
+| `pool_address`           | string | Curve pool contract address                                                                |
+| `chain_id`               | int    | Ethereum chain ID (1 = mainnet)                                                            |
+| `pool_tvl_at_block`      | float  | Total Value Locked in crvUSD (≈ USD): crvUSD balance + WETH balance / price               |
+| `slip_1k`                | float  | Simulated cost of a 1 000 crvUSD→WETH swap via Curve `get_dy(0, 1, dx)`                   |
 
 ---
 

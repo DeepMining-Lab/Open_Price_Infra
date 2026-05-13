@@ -5,10 +5,15 @@ Open Price LINK is an open-data initiative providing a standardized, continuousl
 
 ## 📅 Available Datasets
 
-| Dataset                    | End Date Available              | CSV File                                      |
-|----------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink LINK/USD**  | {{ chainlink.extraction }}      | `data/chainlink_link_usd.csv`                |
-| **Uniswap V3 LINK/USDC**| {{ uniswap.extraction }}        | `data/link_usdc_uniswap_v3_03.csv`           |
+| Dataset                          | End Date Available              | CSV File                                      |
+|----------------------------------|---------------------------------|-----------------------------------------------|
+| **Chainlink LINK/USD**        | {{ chainlink.extraction }}      | `data/chainlink_link_usd.csv`                |
+| **Uniswap V3 LINK/USDC**     | {{ uniswap.extraction }}        | `data/link_usdc_uniswap_v3_03.csv`           |
+| **Uniswap V3 LINK/USDT**     | N/A                             | `data/link_usdt_uniswap_v3_03.csv`           |
+| **Uniswap V3 LINK/WETH**     | N/A                             | `data/link_weth_uniswap_v3_03.csv`           |
+| **SushiSwap V3 LINK/ETH**    | N/A                             | `data/link_eth_sushiswap_v3_03.csv`          |
+| **Uniswap V2 LINK/WETH**     | N/A                             | `data/link_weth_uniswap_v2_03.csv`           |
+| **SushiSwap V2 LINK/ETH**    | N/A                             | `data/link_eth_sushiswap_v2_03.csv`          |
 
 ---
 
@@ -42,6 +47,80 @@ Open Price LINK is an open-data initiative providing a standardized, continuousl
 | `tick`                | int24   | Current tick of the pool at the time of the swap                                             |
 | `pool_tvl_at_block`   | float   | Total Value Locked in USD at the swap block (USDC balance + LINK balance × price)           |
 | `slip_1k`             | float   | Simulated cost of a 1 000 USDC→LINK swap: price impact + fee tier (via QuoterV2). `None` for pre-2022 blocks (QuoterV2 not yet deployed). |
+
+## 🗂 CSV Structure: `link_usdt_uniswap_v3_03.csv`
+
+Same structure as `link_usdc_uniswap_v3_03.csv` with USDT replacing USDC.
+
+| Column                | Type    | Description                                                                                  |
+|-----------------------|---------|----------------------------------------------------------------------------------------------|
+| `timestamp`           | string  | UTC timestamp of the block, e.g. `2024-04-19 23:59:59+00:00`                                |
+| `price_usdt_per_link` | float   | LINK price in USDT derived from `sqrtPriceX96` (LINK=token0 formula: `sqrtP²×1e12`)         |
+| `usdt_amount`         | float   | USDT leg of the swap (signed)                                                                |
+| `link_amount`         | float   | LINK leg of the swap (signed)                                                                |
+| `volume_usdt`         | float   | Trade notional in USDT — `abs(usdt_amount)`                                                  |
+| `block_number`        | int     | Ethereum block number                                                                        |
+| `transaction_hash`    | string  | Transaction hash                                                                             |
+| `log_index`           | int     | Log index within the block                                                                   |
+| `pool_address`        | string  | Uniswap V3 pool contract address                                                             |
+| `pool_fee_tier`       | int     | Pool fee tier (3000 = 0.3%)                                                                  |
+| `chain_id`            | int     | Ethereum chain ID (1 = mainnet)                                                              |
+| `sqrt_price_x96`      | uint160 | Raw `sqrtPriceX96` value from the Swap event                                                 |
+| `liquidity`           | uint128 | Active in-range liquidity at the time of the swap                                            |
+| `tick`                | int24   | Current tick at the time of the swap                                                         |
+| `pool_tvl_at_block`   | float   | Total Value Locked in USD (USDT balance + LINK balance × price)                              |
+| `slip_1k`             | float   | Simulated cost of a 1 000 USDT→LINK swap (via QuoterV2)                                     |
+
+## 🗂 CSV Structure: `link_weth_uniswap_v3_03.csv` and `link_eth_sushiswap_v3_03.csv`
+
+Uniswap V3 and SushiSwap V3 LINK/WETH pools. TVL and volume are expressed in WETH. `slip_1k` simulates buying LINK with 1 WETH.
+
+| Column                | Type    | Description                                                                                  |
+|-----------------------|---------|----------------------------------------------------------------------------------------------|
+| `timestamp`           | string  | UTC timestamp of the block                                                                   |
+| `price_weth_per_link` | float   | LINK price in WETH derived from `sqrtPriceX96` (LINK=token0, WETH=token1: `sqrtP²`)         |
+| `price_eth_per_link`  | float   | (SushiSwap variant) Same formula, column renamed to `price_eth_per_link`                     |
+| `weth_amount`         | float   | WETH leg of the swap (signed)                                                                |
+| `eth_amount`          | float   | (SushiSwap variant) Same field, renamed to `eth_amount`                                      |
+| `link_amount`         | float   | LINK leg of the swap (signed)                                                                |
+| `volume_weth`         | float   | Trade notional in WETH — `abs(weth_amount)`                                                  |
+| `volume_eth`          | float   | (SushiSwap variant)                                                                          |
+| `block_number`        | int     | Ethereum block number                                                                        |
+| `transaction_hash`    | string  | Transaction hash                                                                             |
+| `log_index`           | int     | Log index within the block                                                                   |
+| `pool_address`        | string  | Pool contract address                                                                        |
+| `pool_fee_tier`       | int     | Pool fee tier (3000 = 0.3%)                                                                  |
+| `chain_id`            | int     | Ethereum chain ID (1 = mainnet)                                                              |
+| `sqrt_price_x96`      | uint160 | Raw `sqrtPriceX96` value from the Swap event                                                 |
+| `liquidity`           | uint128 | Active in-range liquidity at the time of the swap                                            |
+| `tick`                | int24   | Current tick at the time of the swap                                                         |
+| `pool_tvl_at_block`   | float   | Total Value Locked in WETH (WETH balance + LINK balance × price)                             |
+| `slip_1k`             | float   | Simulated cost of a 1 WETH→LINK swap (via QuoterV2 for V3, N/A for pre-deployment blocks)   |
+
+## 🗂 CSV Structure: `link_weth_uniswap_v2_03.csv` and `link_eth_sushiswap_v2_03.csv`
+
+Uniswap V2 and SushiSwap V2 LINK/WETH pools. Price derived from swap amounts; reserves fetched via `getReserves()`. TVL and volume in WETH. `slip_1k` uses the analytical V2 formula.
+
+| Column                | Type    | Description                                                                                  |
+|-----------------------|---------|----------------------------------------------------------------------------------------------|
+| `timestamp`           | string  | UTC timestamp of the block                                                                   |
+| `price_weth_per_link` | float   | Effective LINK price in WETH from swap amounts (`\|WETH_net\| / \|LINK_net\|`)               |
+| `price_eth_per_link`  | float   | (SushiSwap variant)                                                                          |
+| `weth_amount`         | float   | WETH net flow (positive = into pool, negative = out of pool)                                 |
+| `eth_amount`          | float   | (SushiSwap variant)                                                                          |
+| `link_amount`         | float   | LINK net flow (signed)                                                                       |
+| `volume_weth`         | float   | Trade notional in WETH — `abs(weth_amount)`                                                  |
+| `volume_eth`          | float   | (SushiSwap variant)                                                                          |
+| `block_number`        | int     | Ethereum block number                                                                        |
+| `transaction_hash`    | string  | Transaction hash                                                                             |
+| `log_index`           | int     | Log index within the block                                                                   |
+| `pool_address`        | string  | Pool contract address                                                                        |
+| `pool_fee_tier`       | int     | Pool fee tier (3000 = 0.3%)                                                                  |
+| `chain_id`            | int     | Ethereum chain ID (1 = mainnet)                                                              |
+| `reserve0`            | uint112 | Raw token0 (LINK) reserve at the swap block                                                  |
+| `reserve1`            | uint112 | Raw token1 (WETH) reserve at the swap block                                                  |
+| `pool_tvl_at_block`   | float   | Total Value Locked in WETH (WETH reserve + LINK reserve × price)                             |
+| `slip_1k`             | float   | Simulated cost of a 1 WETH→LINK swap using the V2 analytical formula                        |
 
 ---
 
