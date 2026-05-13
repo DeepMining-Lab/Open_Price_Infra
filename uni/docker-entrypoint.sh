@@ -2,7 +2,7 @@
 
 cd /app/uni || exit 1
 
-RPC=${RPC:-"http://172.30.122.3:8552"}
+RPC=${RPC:-"http://172.30.122.6:8548"}
 export RPC
 
 INTERVAL_DAYS=${INTERVAL_DAYS:-0}
