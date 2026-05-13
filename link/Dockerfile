@@ -22,7 +22,7 @@ RUN groupadd -g 1000 debian && \
 
 RUN mkdir -p /app/link/logs /app/link \
   && mkdir -p /home/debian/.ssh \
-  && ssh-keyscan github.com > /home/debian/.ssh/known_hosts \
+  && ssh-keyscan github.com extract.lan.text-analytics.ch > /home/debian/.ssh/known_hosts \
   && chmod 700 /home/debian/.ssh \
   && chmod 600 /home/debian/.ssh/known_hosts \
   && chown -R debian:debian /app /home/debian/.ssh
