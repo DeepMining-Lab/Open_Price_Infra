@@ -10,54 +10,68 @@ import sys
 import glob
 import pytz
 
-mp.dps = 50  # Applique une haute précision pour les calculs décimaux
+mp.dps = 50
 
-# Lecture de la variable d'environnement RPC
 RPC_URL = os.environ.get("RPC", "")
 if not RPC_URL:
     print("ERREUR: la variable d'environnement 'RPC' n'est pas définie.", file=sys.stderr)
     sys.exit(1)
 
-# Constants
-EXPECTED_TOPIC0 = "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67" # Event Swap
+EXPECTED_TOPIC0 = "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67"
 
-# gestion des chemins
+POOL_ADDRESS    = "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640"
+TOKEN0_ADDRESS  = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"  # USDC
+TOKEN1_ADDRESS  = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"  # WETH
+TOKEN0_DECIMALS = 6   # USDC
+TOKEN1_DECIMALS = 18  # WETH
+POOL_FEE_TIER   = 500
+
+QUOTER_V2_ADDRESS = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"
+QUOTER_V2_ABI = [
+    {
+        "inputs": [
+            {
+                "components": [
+                    {"name": "tokenIn",          "type": "address"},
+                    {"name": "tokenOut",         "type": "address"},
+                    {"name": "amountIn",         "type": "uint256"},
+                    {"name": "fee",              "type": "uint24"},
+                    {"name": "sqrtPriceLimitX96","type": "uint160"},
+                ],
+                "name": "params",
+                "type": "tuple",
+            }
+        ],
+        "name": "quoteExactInputSingle",
+        "outputs": [
+            {"name": "amountOut",                 "type": "uint256"},
+            {"name": "sqrtPriceX96After",         "type": "uint160"},
+            {"name": "initializedTicksCrossed",   "type": "uint32"},
+            {"name": "gasEstimate",               "type": "uint256"},
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function",
+    }
+]
+
 here = os.path.dirname(__file__)
-data_dir = os.path.join(here, os.pardir, 'data', 'output')
-data_dir = os.path.normpath(data_dir)
+data_dir = os.path.normpath(os.path.join(here, os.pardir, 'data', 'output'))
 pattern = os.path.join(data_dir, '*.csv')
 csv_files = glob.glob(pattern)
 
+
 def decode_swap_event(data_hex):
-    """
-    Décode les données de l'événement Swap depuis le format hex
-
-    Répartition des champs dans data :
-    amount0 : int256 → 256 bits
-    amount1 : int256 → 256 bits
-    sqrtPriceX96 : uint160 → 160 bits
-    liquidity : uint128 → 128 bits
-    tick : int24 → 24 bits (rempli sur 256 bits, car les types dans Ethereum sont alignés sur 32 octets)
-    """
     try:
-        # Enlever le préfixe '0x' s'il existe
         data = data_hex.replace('0x', '')
+        amount0      = int.from_bytes(bytes.fromhex(data[0:64]),    byteorder='big', signed=True)
+        amount1      = int.from_bytes(bytes.fromhex(data[64:128]),  byteorder='big', signed=True)
+        sqrtPriceX96 = int(data[128:192], 16)
+        liquidity    = int(data[192:256], 16)
+        tick         = int.from_bytes(bytes.fromhex(data[256:320]), byteorder='big', signed=True)
 
-        amount0_hex = data[0:64]            # Premier 32 octets (int256)
-        amount1_hex = data[64:128]          # Deuxième 32 octets (int256)
-        sqrtPriceX96_hex = data[128:192]    # Occupe 32 octets -> 128 à 192 en hexa    
-
-        # Conversion hex -> int
-        amount0 = int.from_bytes(bytes.fromhex(amount0_hex), byteorder='big', signed=True)
-        amount1 = int.from_bytes(bytes.fromhex(amount1_hex), byteorder='big', signed=True)        
-        sqrtPriceX96 = int(sqrtPriceX96_hex, 16)
-        
-        # Conversion des montants avec décimales
-        usdc_amount = mp.mpf(amount0) / 10**6   # USDC a 6 décimales
-        eth_amount = mp.mpf(amount1) / 10**18   # ETH a 18 décimales
-        
-        return usdc_amount, eth_amount, sqrtPriceX96
-    
+        usdc_amount  = mp.mpf(amount0) / 10**TOKEN0_DECIMALS  # USDC
+        eth_amount   = mp.mpf(amount1) / 10**TOKEN1_DECIMALS  # WETH
+        return usdc_amount, eth_amount, sqrtPriceX96, liquidity, tick
     except Exception as e:
         print(f"Erreur dans decode_swap_event: {e}")
         print(f"Data hex reçue: {data_hex}")
@@ -65,181 +79,199 @@ def decode_swap_event(data_hex):
 
 
 def calculate_price(sqrtPriceX96, eth_amount, usdc_amount):
-    """
-    Calcule le prix de 1 ETH en USDC à partir de sqrtPriceX96
-    """
     try:
-        # Conversion en nombre décimal de haute précision
-        sqrtPriceX96 = mp.mpf(sqrtPriceX96)
-        
-        # Calcul du prix brut (ETH par USDC)
-        sqrt_price = sqrtPriceX96 / (2 ** 96)
-        price_eth_per_usdc = sqrt_price ** 2  # token1 (ETH) par token0 (USDC)
-
-        # Ajustement des décimales (USDC:6, ETH:18 → écart 12 décimales)
-        price_eth_per_usdc_adj = price_eth_per_usdc * mp.mpf("1e-12")
-
-        # Inversion pour obtenir USDC par ETH
+        sqrt_price = mp.mpf(sqrtPriceX96) / (2 ** 96)
+        # USDC est token0, WETH est token1 → prix = 1 / (sqrtP² × 1e-12)
+        price_eth_per_usdc_adj = sqrt_price ** 2 * mp.mpf("1e-12")
         price_usdc_per_eth = 1 / price_eth_per_usdc_adj
-
-        #print(f"1 ETH = {mp.nstr(price_usdc_per_eth, 6)} USDC")
-
-        # Calcul du volume en USDC (valeur absolue)
-        volume_usdc = abs(usdc_amount) + abs(eth_amount * price_usdc_per_eth)
-    
+        volume_usdc = abs(usdc_amount)
         return price_usdc_per_eth, volume_usdc
-        
     except Exception as e:
         print(f"Erreur dans calculate_price: {e}")
-        print(f"sqrtPriceX96 reçu: {sqrtPriceX96}") 
         raise
 
-def process_uniswap_logs(csv_path, web3):
-    """
-    Traite les logs Uniswap et crée un nouveau CSV avec timestamps et prix
-    """
+
+def get_balance_of(web3, token_address, holder_address, block_number):
+    selector   = "0x70a08231"
+    padded     = holder_address[2:].lower().zfill(64)
+    result     = web3.eth.call(
+        {'to': token_address, 'data': selector + padded},
+        block_number,
+    )
+    return int(result.hex(), 16)
+
+
+def get_tvl_at_block(web3, block_number, price_usdc_per_eth):
     try:
-        # Lecture du CSV
+        raw0 = get_balance_of(web3, TOKEN0_ADDRESS, POOL_ADDRESS, block_number)
+        raw1 = get_balance_of(web3, TOKEN1_ADDRESS, POOL_ADDRESS, block_number)
+        bal0 = mp.mpf(raw0) / 10**TOKEN0_DECIMALS  # USDC ≈ 1 USD
+        bal1 = mp.mpf(raw1) / 10**TOKEN1_DECIMALS  # WETH, valorisé en USD
+        return float(bal0 + bal1 * price_usdc_per_eth)
+    except Exception as e:
+        print(f"Erreur TVL au bloc {block_number}: {e}")
+        return None
+
+
+def get_slip_1k(web3, block_number, price_usdc_per_eth):
+    try:
+        quoter    = web3.eth.contract(
+            address=Web3.to_checksum_address(QUOTER_V2_ADDRESS),
+            abi=QUOTER_V2_ABI,
+        )
+        amount_in = 1000 * 10**TOKEN0_DECIMALS  # 1 000 USDC en unités brutes
+        result    = quoter.functions.quoteExactInputSingle({
+            'tokenIn':           Web3.to_checksum_address(TOKEN0_ADDRESS),
+            'tokenOut':          Web3.to_checksum_address(TOKEN1_ADDRESS),
+            'amountIn':          amount_in,
+            'fee':               POOL_FEE_TIER,
+            'sqrtPriceLimitX96': 0,
+        }).call(block_identifier=block_number)
+
+        eth_received  = mp.mpf(result[0]) / 10**TOKEN1_DECIMALS
+        expected_eth  = mp.mpf(1000) / price_usdc_per_eth
+        return float(1 - eth_received / expected_eth)
+    except Exception as e:
+        print(f"Erreur slip_1k au bloc {block_number}: {e}")
+        return None
+
+
+def process_uniswap_logs(csv_path, web3):
+    try:
         print(f"Lecture du fichier: {csv_path}")
         df = pd.read_csv(csv_path)
-        print(f"Nombre de lignes dans le CSV: {len(df)}")
+        print(f"Nombre de lignes: {len(df)}")
         print("Colonnes disponibles:", df.columns.tolist())
-        
-        # Vérifier que la colonne 'data' existe
+
         if 'data' not in df.columns:
-            print("Erreur: La colonne 'data' n'existe pas dans le CSV")
+            print("Erreur: colonne 'data' absente du CSV")
             return pd.DataFrame()
-        
-        # Création des listes pour stocker les résultats
-        usdc_amounts = []
-        eth_amounts = []
-        timestamps = []
-        prices = []
-        volumes = []
-        processed_block_numbers = []
-        tx_hashes = []
 
-        # Récupérer tous les numéros de blocs uniques
+        df = df.sort_values(["block_number", "log_index"], ignore_index=True)
+
+        chain_id_rpc = web3.eth.chain_id
+
         block_numbers = list(set(df['block_number'].tolist()))
-        print(f"Nombre de blocs uniques à récupérer : {len(block_numbers)}")
+        print(f"Blocs uniques à récupérer : {len(block_numbers)}")
 
-        # Récupérer tous les blocs en une seule passe
         blocks = {}
         for bn in block_numbers:
             try:
                 block = web3.eth.get_block(bn)
                 blocks[bn] = datetime.fromtimestamp(block['timestamp'], tz=pytz.UTC)
             except Exception as e:
-                print(f"Erreur sur le bloc {bn} : {e}")
+                print(f"Erreur bloc {bn}: {e}")
                 blocks[bn] = None
-        
+
+        rows = []
+        block_last_price = {}
+
         total_rows = len(df)
         for index, row in df.iterrows():
             try:
-                # Afficher la progression
-                print(f"\nTraitement de la ligne {index + 1}/{total_rows}")
-
-                # Vérifier que topic0 correspond à la signature de l'event Swap attendue
+                print(f"Traitement ligne {index + 1}/{total_rows}")
                 if row['topic0'] != EXPECTED_TOPIC0:
-                    print("Signature de l'événement ne correspond pas à un event de type Swap.")
+                    print("topic0 inattendu, ignoré.")
                     continue
-                
-                # Décodage du prix
-                usdc, eth, sqrtPriceX96 = decode_swap_event(row['data'])
-                #sqrtPriceX96 = decode_swap_event(row['data'])
 
-                 # Calcul du prix et volume
-                price, volume = calculate_price(sqrtPriceX96, eth, usdc)
-                #price = calculate_price(sqrtPriceX96)
-                
-                # Récupération du timestamp
+                log_address = str(row.get("address", "")).lower()
+                if log_address and log_address != POOL_ADDRESS.lower():
+                    print(f"pool_address inattendue ({log_address}), ignorée.")
+                    continue
+
+                usdc_amount, eth_amount, sqrtPriceX96, liquidity, tick = decode_swap_event(row['data'])
+                price, volume = calculate_price(sqrtPriceX96, eth_amount, usdc_amount)
                 timestamp = blocks.get(row['block_number'])
-                                
-                # Enregistrement des données valides
-                if timestamp:
-                    usdc_amounts.append(usdc)
-                    eth_amounts.append(eth)
-                    volumes.append(volume)
-                    timestamps.append(timestamp)
-                    prices.append(price)
-                    processed_block_numbers.append(row['block_number'])
-                    tx_hashes.append(row['transaction_hash'])
-                
+                if not timestamp:
+                    continue
+
+                bn = row['block_number']
+                block_last_price[bn] = price
+
+                rows.append({
+                    'timestamp':          timestamp,
+                    'price_usdc_per_eth': price,
+                    'usdc_amount':        usdc_amount,
+                    'eth_amount':         eth_amount,
+                    'volume_usdc':        volume,
+                    'block_number':       bn,
+                    'transaction_hash':   row['transaction_hash'],
+                    'log_index':          row.get('log_index'),
+                    'pool_address':       row.get('address', POOL_ADDRESS),
+                    'pool_fee_tier':      POOL_FEE_TIER,
+                    'chain_id':           row.get('chain_id', chain_id_rpc),
+                    'sqrt_price_x96':     sqrtPriceX96,
+                    'liquidity':          liquidity,
+                    'tick':               tick,
+                })
             except Exception as e:
-                print(f"Erreur lors du traitement de la ligne {index}: {e}")
+                print(f"Erreur ligne {index}: {e}")
                 continue
-        
-        print(f"\nNombre de prix valides collectés: {len(prices)}")
-        
-        if len(prices) == 0:
-            print("Aucun prix valide n'a été collecté")
+
+        if not rows:
+            print("Aucun prix valide collecté")
             return pd.DataFrame()
-        
-        # Création du nouveau DataFrame
-        result_df = pd.DataFrame({
-            'timestamp': timestamps,
-            'price_usdc_per_eth': prices,
-            'usdc_amount': usdc_amounts,
-            'eth_amount': eth_amounts,
-            'volume_usdc': volumes,
-            'block_number': processed_block_numbers,
-            'transaction_hash': tx_hashes
-        })
-        
-        print(f"DataFrame créé avec {len(result_df)} lignes")
+
+        unique_blocks = list(block_last_price.keys())
+        print(f"\nCal TVL et slip_1k pour {len(unique_blocks)} blocs uniques...")
+
+        tvl_cache  = {}
+        slip_cache = {}
+        for bn in unique_blocks:
+            price_ref = block_last_price[bn]
+            tvl_cache[bn]  = get_tvl_at_block(web3, bn, price_ref)
+            slip_cache[bn] = get_slip_1k(web3, bn, price_ref)
+
+        for r in rows:
+            r['pool_tvl_at_block'] = tvl_cache.get(r['block_number'])
+            r['slip_1k']           = slip_cache.get(r['block_number'])
+
+        result_df = pd.DataFrame(rows)
+        print(f"\nDataFrame créé avec {len(result_df)} lignes")
         print("\nAperçu des prix:")
         print(result_df['price_usdc_per_eth'].describe())
-        
         return result_df
-        
+
     except Exception as e:
         print(f"Erreur générale dans process_uniswap_logs: {e}")
         return pd.DataFrame()
 
+
 def main(output_filename='eth_usdc_uniswap_v3_005_last.csv'):
-    """
-    Fonction principale pour traiter tous les fichiers CSV du dossier output
-    """
-    
     if not csv_files:
         print("Aucun fichier CSV trouvé dans le dossier 'output'")
         return None
-    
+
     print(f"Fichiers CSV trouvés: {len(csv_files)}")
     for f in csv_files:
         print(f"- {f}")
-    
-    # Initialisation de la connexion Web3
+
     web3 = Web3(Web3.HTTPProvider(RPC_URL))
     if not web3.is_connected():
-        print(f"ERREUR: impossible de se connecter à l'endpoint RPC '{RPC_URL}'", file=sys.stderr)
+        print(f"ERREUR: impossible de se connecter à '{RPC_URL}'", file=sys.stderr)
         sys.exit(1)
+    print(f"Connexion établie: {web3.is_connected()}")
 
-    print(f"Connexion au réseau établie: {web3.is_connected()}")
-    
     all_prices = pd.DataFrame()
-    
     for csv_file in csv_files:
         prices = process_uniswap_logs(csv_file, web3)
         if not prices.empty:
             all_prices = pd.concat([all_prices, prices])
-    
-    if all_prices.empty:
-        print("Aucune donnée n'a été traitée.")
-        return None
-    
 
-    # Construction du chemin vers le dossier `data/`
-    here2 = os.path.dirname(__file__)
-    data_dir2 = os.path.normpath(os.path.join(here2, os.pardir, 'data'))
+    if all_prices.empty:
+        print("Aucune donnée traitée.")
+        return None
+
+    here2      = os.path.dirname(__file__)
+    data_dir2  = os.path.normpath(os.path.join(here2, os.pardir, 'data'))
     output_path = os.path.join(data_dir2, output_filename)
 
+    all_prices = all_prices.sort_values("timestamp").reset_index(drop=True)
     all_prices.to_csv(output_path, index=False)
-
     print(f"\nFichier CSV créé: {output_path}")
     print(f"Nombre total d'événements traités: {len(all_prices)}")
-    
     return all_prices
 
+
 if __name__ == "__main__":
-    prices_df = main()
+    main()
