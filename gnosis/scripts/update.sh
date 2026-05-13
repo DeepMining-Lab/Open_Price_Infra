@@ -66,8 +66,8 @@ echo "[INFO] Timestamp de démarrage pour Chainlink (dernière date +1s) : $star
 
 
 # Exécuter le traitement pour récupérer les prix de Chainlink
-echo "[INFO] Lancement de chainlink_dicho.py..."
-python3 "$PROJECT_DIR/scripts/chainlink_dicho.py" --debut "$start_ts_chainlink"
+echo "[INFO] Lancement de chainlink_gno_usd.py..."
+python3 "$PROJECT_DIR/scripts/chainlink_gno_usd.py" --debut "$start_ts_chainlink"
 echo "[INFO] Traitement Chainlink terminé"
 
 

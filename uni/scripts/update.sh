@@ -79,18 +79,18 @@ if ! ls "$OUTPUT_DIR"/*.csv >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "[INFO] Lancement de Uniswap_process_logs.py..."
-if ! python3 "$PROJECT_DIR/scripts/Uniswap_process_logs.py"; then
-  echo "[ERROR] Échec Uniswap_process_logs.py." >&2
+echo "[INFO] Lancement de uni_usdc_uniswap_v3_03.py..."
+if ! python3 "$PROJECT_DIR/scripts/uni_usdc_uniswap_v3_03.py"; then
+  echo "[ERROR] Échec uni_usdc_uniswap_v3_03.py." >&2
   rm -rf "$OUTPUT_DIR"/* || true
   exit 1
 fi
 echo "[INFO] Traitement Uniswap terminé"
 
 # 5. Traitement Chainlink
-echo "[INFO] Lancement de chainlink_dicho.py..."
-if ! python3 "$PROJECT_DIR/scripts/chainlink_dicho.py" --debut "$start_ts_chainlink"; then
-  echo "[ERROR] Échec chainlink_dicho.py." >&2
+echo "[INFO] Lancement de chainlink_uni_usd.py..."
+if ! python3 "$PROJECT_DIR/scripts/chainlink_uni_usd.py" --debut "$start_ts_chainlink"; then
+  echo "[ERROR] Échec chainlink_uni_usd.py." >&2
   [[ -f "$LAST_FILE_CHAINLINK" ]] && rm "$LAST_FILE_CHAINLINK" || true
   exit 1
 fi

@@ -98,13 +98,13 @@ echo "[INFO] 'cryo logs' terminé"
 
 echo "[INFO] Vérification de la présence d'au moins un CSV dans $OUTPUT_DIR..."
 if ! ls "$OUTPUT_DIR"/*.csv >/dev/null 2>&1; then
-  echo "[ERROR] Aucun fichier CSV trouvé dans $OUTPUT_DIR. Impossible de lancer Uniswap_process_logs.py." >&2
+  echo "[ERROR] Aucun fichier CSV trouvé dans $OUTPUT_DIR. Impossible de lancer eth_usdc_uniswap_v3_005.py." >&2
   exit 1
 fi
 
-echo "[INFO] Lancement de Uniswap_process_logs.py..."
-if ! python3 "$PROJECT_DIR/scripts/Uniswap_process_logs.py"; then
-  echo "[ERROR] Échec de l’exécution de Uniswap_process_logs.py." >&2
+echo "[INFO] Lancement de eth_usdc_uniswap_v3_005.py..."
+if ! python3 "$PROJECT_DIR/scripts/eth_usdc_uniswap_v3_005.py"; then
+  echo "[ERROR] Échec de l’exécution de eth_usdc_uniswap_v3_005.py." >&2
   if ! rm -rf "$OUTPUT_DIR"/*; then
       echo "[WARNING] Impossible de supprimer le contenu de $OUTPUT_DIR." >&2
   fi
@@ -114,9 +114,9 @@ echo "[INFO] Traitement Uniswap terminé"
 
 
 # 5. Exécuter le traitement pour récupérer les prix de Chainlink
-echo "[INFO] Lancement de chainlink_dicho.py..."
-if ! python3 "$PROJECT_DIR/scripts/chainlink_dicho.py" --debut "$start_ts_chainlink"; then
-  echo "[ERROR] Échec de l’exécution de chainlink_dicho.py." >&2
+echo "[INFO] Lancement de chainlink_eth_usd.py..."
+if ! python3 "$PROJECT_DIR/scripts/chainlink_eth_usd.py" --debut "$start_ts_chainlink"; then
+  echo "[ERROR] Échec de l’exécution de chainlink_eth_usd.py." >&2
   if [[ -f "$LAST_FILE_CHAINLINK" ]]; then
     echo "[INFO] Suppression du fichier potentiellement corrompu : $LAST_FILE_CHAINLINK"
     if ! rm "$LAST_FILE_CHAINLINK"; then

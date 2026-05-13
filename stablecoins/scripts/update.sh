@@ -68,18 +68,18 @@ echo "[INFO] Timestamp de démarrage USDC : $start_ts_usdc"
 echo "[INFO] Timestamp de démarrage USDT : $start_ts_usdt"
 
 # Extraction Chainlink USDC/USD
-echo "[INFO] Lancement de chainlink_dicho_usdc.py..."
-if ! python3 "$PROJECT_DIR/scripts/chainlink_dicho_usdc.py" --debut "$start_ts_usdc"; then
-  echo "[ERROR] Échec de chainlink_dicho_usdc.py." >&2
+echo "[INFO] Lancement de chainlink_usdc_usd.py..."
+if ! python3 "$PROJECT_DIR/scripts/chainlink_usdc_usd.py" --debut "$start_ts_usdc"; then
+  echo "[ERROR] Échec de chainlink_usdc_usd.py." >&2
   [[ -f "$LAST_FILE_USDC" ]] && rm "$LAST_FILE_USDC"
   exit 1
 fi
 echo "[INFO] Traitement Chainlink USDC terminé"
 
 # Extraction Chainlink USDT/USD
-echo "[INFO] Lancement de chainlink_dicho_usdt.py..."
-if ! python3 "$PROJECT_DIR/scripts/chainlink_dicho_usdt.py" --debut "$start_ts_usdt"; then
-  echo "[ERROR] Échec de chainlink_dicho_usdt.py." >&2
+echo "[INFO] Lancement de chainlink_usdt_usd.py..."
+if ! python3 "$PROJECT_DIR/scripts/chainlink_usdt_usd.py" --debut "$start_ts_usdt"; then
+  echo "[ERROR] Échec de chainlink_usdt_usd.py." >&2
   [[ -f "$LAST_FILE_USDT" ]] && rm "$LAST_FILE_USDT"
   exit 1
 fi
