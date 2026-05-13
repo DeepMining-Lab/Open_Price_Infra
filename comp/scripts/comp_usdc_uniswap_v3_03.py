@@ -270,6 +270,7 @@ def main(output_filename='comp_usdc_uniswap_v3_03_last.csv'):
     data_dir2  = os.path.normpath(os.path.join(here2, os.pardir, 'data'))
     output_path = os.path.join(data_dir2, output_filename)
 
+    all_prices = all_prices.sort_values("timestamp").reset_index(drop=True)
     all_prices.to_csv(output_path, index=False)
     print(f"\nFichier CSV créé: {output_path}")
     print(f"Nombre total d'événements traités: {len(all_prices)}")
