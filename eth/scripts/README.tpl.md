@@ -89,6 +89,60 @@ Open Price ETH is an open-data initiative providing a standardized, continuously
 | `pool_tvl_at_block`   | float   | Total Value Locked in USD at the swap block (USDC balance + WETH balance × price)           |
 | `slip_1k`             | float   | Simulated cost of a 1 000 USDC→WETH swap: price impact + fee tier (via QuoterV2). `None` for pre-2022 blocks (QuoterV2 not yet deployed). |
 
+**Metadata d'extraction**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `extraction_run_id` | string | UUID identifiant l'exécution d'extraction (relie toutes les lignes d'une même extraction) | script-local (`uuid4`) |
+| `schema_version` | string | Version du schéma CSV (ex. `dex_uniswap_v3_v1`) | config |
+| `extraction_timestamp_utc` | string | Timestamp UTC au moment du lancement du script | script-local |
+| `client_name` | string | Nom du client Ethereum du nœud RPC | `web3_clientVersion` (avant le premier `/`) |
+| `client_version` | string | Version du client Ethereum | `web3_clientVersion` (après le premier `/`) |
+| `node_chain_id` | int | Chain ID rapporté par le nœud | `eth_chainId` |
+| `node_head_block_at_extraction` | int | Numéro du dernier bloc connu au moment de l'extraction | `eth_blockNumber` |
+| `node_sync_completion_block` | int | Bloc courant de synchronisation (= head si nœud synchronisé) | `eth_syncing` ou `eth_blockNumber` |
+| `rpc_method_used` | string | Méthodes RPC utilisées pour l'extraction | config |
+| `extraction_script_hash` | string | SHA-256 du fichier Python ayant produit ce CSV | `hashlib.sha256(open(__file__,'rb').read())` |
+| `abi_hash` | string | SHA-256 de l'ABI de l'événement Swap utilisée | `hashlib.sha256(SWAP_EVENT_ABI.encode())` |
+| `network_name` | string | Nom lisible du réseau blockchain | config |
+
+**Métadonnées de bloc et transaction**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `block_timestamp_utc` | string | Timestamp UTC du bloc (identique à `timestamp`) | `eth_getBlockByNumber` → `timestamp` |
+| `block_hash` | string | Hash du bloc | `eth_getBlockByNumber` → `hash` |
+| `transaction_index` | int | Index de la transaction dans le bloc | issu du CSV cryo (`transaction_index`) |
+| `event_signature` | string | Keccak-256 de la signature de l'événement Swap (= `topic0`) | config |
+
+**Métadonnées DEX et tokens**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `dex_protocol` | string | Protocole DEX (`uniswap`, `sushiswap`, `curve`) | config |
+| `dex_version` | string | Version du protocole (`v3`, `v2`, etc.) | config |
+| `token0_address` | string | Adresse du contrat token0 du pool | config |
+| `token1_address` | string | Adresse du contrat token1 du pool | config |
+| `token0_symbol` | string | Symbole de token0 | `eth_call:symbol()` sur le contrat ERC-20 |
+| `token1_symbol` | string | Symbole de token1 | `eth_call:symbol()` sur le contrat ERC-20 |
+| `token0_decimals` | int | Nombre de décimales de token0 | config |
+| `token1_decimals` | int | Nombre de décimales de token1 | config |
+| `amount0_raw` | int | Flux net de token0 en unités brutes (positif = entre dans le pool) | décodage ABI du log Swap |
+| `amount1_raw` | int | Flux net de token1 en unités brutes (positif = entre dans le pool) | décodage ABI du log Swap |
+| `amount0_normalized` | float | `amount0_raw / 10^token0_decimals` | calculé |
+| `amount1_normalized` | float | `amount1_raw / 10^token1_decimals` | calculé |
+| `swap_sender` | string | Adresse de l'envoyeur du swap (`sender` dans l'event) | `topic1` du log |
+| `swap_recipient` | string | Adresse du destinataire du swap (`recipient` dans l'event) | `topic2` du log |
+| `swap_direction` | string | Direction du swap : `token0_to_token1` ou `token1_to_token0` (déduit du signe de `amount0_raw`) | calculé |
+| `base_token_address` | string | Adresse du token de base (token pricé) | config |
+| `quote_token_address` | string | Adresse du token de cotation (référence) | config |
+| `base_token_symbol` | string | Symbole du token de base | config |
+| `quote_token_symbol` | string | Symbole du token de cotation | config |
+| `price_source_field` | string | Méthode utilisée pour calculer le prix (`sqrt_price_x96` ou `amount_ratio`) | config |
+| `pool_tvl_threshold_used` | int | Seuil de TVL (en USD ou équivalent) utilisé pour le flag `low_liquidity` | config |
+| `slip_10k` | float | Slippage simulé pour un swap de 10 000 USDC→WETH, calculé par la même méthode que `slip_1k` via QuoterV2 | calculé via QuoterV2 |
+| `quality_flags` | string | Drapeaux qualité séparés par `\|` : `low_liquidity`, `zero_amount`, `extreme_slippage` ; `ok` si aucun | calculé |
+
 ## 🗂 CSV Structure: `weth_usdc_uniswap_v2_03.csv`
 
 Uniswap V2 WETH/USDC pool (USDC=token0, WETH=token1). Price from swap amounts; reserves from `getReserves()`. `slip_1k` simulates buying WETH with 1 000 USDC.
@@ -110,6 +164,60 @@ Uniswap V2 WETH/USDC pool (USDC=token0, WETH=token1). Price from swap amounts; r
 | `reserve1`            | uint112 | Raw token1 (WETH) reserve at the swap block                                                  |
 | `pool_tvl_at_block`   | float   | Total Value Locked in USD (USDC reserve + WETH reserve × price)                              |
 | `slip_1k`             | float   | Simulated cost of a 1 000 USDC→WETH swap using the V2 analytical formula                    |
+
+**Metadata d'extraction**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `extraction_run_id` | string | UUID identifiant l'exécution d'extraction (relie toutes les lignes d'une même extraction) | script-local (`uuid4`) |
+| `schema_version` | string | Version du schéma CSV (ex. `dex_uniswap_v2_v1`) | config |
+| `extraction_timestamp_utc` | string | Timestamp UTC au moment du lancement du script | script-local |
+| `client_name` | string | Nom du client Ethereum du nœud RPC | `web3_clientVersion` (avant le premier `/`) |
+| `client_version` | string | Version du client Ethereum | `web3_clientVersion` (après le premier `/`) |
+| `node_chain_id` | int | Chain ID rapporté par le nœud | `eth_chainId` |
+| `node_head_block_at_extraction` | int | Numéro du dernier bloc connu au moment de l'extraction | `eth_blockNumber` |
+| `node_sync_completion_block` | int | Bloc courant de synchronisation (= head si nœud synchronisé) | `eth_syncing` ou `eth_blockNumber` |
+| `rpc_method_used` | string | Méthodes RPC utilisées pour l'extraction | config |
+| `extraction_script_hash` | string | SHA-256 du fichier Python ayant produit ce CSV | `hashlib.sha256(open(__file__,'rb').read())` |
+| `abi_hash` | string | SHA-256 de l'ABI de l'événement Swap utilisée | `hashlib.sha256(SWAP_EVENT_ABI.encode())` |
+| `network_name` | string | Nom lisible du réseau blockchain | config |
+
+**Métadonnées de bloc et transaction**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `block_timestamp_utc` | string | Timestamp UTC du bloc (identique à `timestamp`) | `eth_getBlockByNumber` → `timestamp` |
+| `block_hash` | string | Hash du bloc | `eth_getBlockByNumber` → `hash` |
+| `transaction_index` | int | Index de la transaction dans le bloc | issu du CSV cryo (`transaction_index`) |
+| `event_signature` | string | Keccak-256 de la signature de l'événement Swap (= `topic0`) | config |
+
+**Métadonnées DEX et tokens**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `dex_protocol` | string | Protocole DEX (`uniswap`, `sushiswap`, `curve`) | config |
+| `dex_version` | string | Version du protocole (`v3`, `v2`, etc.) | config |
+| `token0_address` | string | Adresse du contrat token0 du pool | config |
+| `token1_address` | string | Adresse du contrat token1 du pool | config |
+| `token0_symbol` | string | Symbole de token0 | `eth_call:symbol()` sur le contrat ERC-20 |
+| `token1_symbol` | string | Symbole de token1 | `eth_call:symbol()` sur le contrat ERC-20 |
+| `token0_decimals` | int | Nombre de décimales de token0 | config |
+| `token1_decimals` | int | Nombre de décimales de token1 | config |
+| `amount0_raw` | int | Flux net de token0 en unités brutes (positif = entre dans le pool) | décodage ABI du log Swap |
+| `amount1_raw` | int | Flux net de token1 en unités brutes (positif = entre dans le pool) | décodage ABI du log Swap |
+| `amount0_normalized` | float | `amount0_raw / 10^token0_decimals` | calculé |
+| `amount1_normalized` | float | `amount1_raw / 10^token1_decimals` | calculé |
+| `swap_sender` | string | Adresse de l'envoyeur du swap (`sender` dans l'event) | `topic1` du log |
+| `swap_recipient` | string | Adresse du destinataire du swap (`to` dans l'event) | `topic2` du log |
+| `swap_direction` | string | Direction du swap : `token0_to_token1` ou `token1_to_token0` (déduit du signe de `amount0_raw`) | calculé |
+| `base_token_address` | string | Adresse du token de base (token pricé) | config |
+| `quote_token_address` | string | Adresse du token de cotation (référence) | config |
+| `base_token_symbol` | string | Symbole du token de base | config |
+| `quote_token_symbol` | string | Symbole du token de cotation | config |
+| `price_source_field` | string | Méthode utilisée pour calculer le prix (`sqrt_price_x96` ou `amount_ratio`) | config |
+| `pool_tvl_threshold_used` | int | Seuil de TVL (en USD ou équivalent) utilisé pour le flag `low_liquidity` | config |
+| `slip_10k` | float | Slippage simulé pour un swap de 10 000 USDC→WETH, calculé par la formule AMM V2 | calculé via formule AMM |
+| `quality_flags` | string | Drapeaux qualité séparés par `\|` : `low_liquidity`, `zero_amount`, `extreme_slippage` ; `ok` si aucun | calculé |
 
 ## 🗂 CSV Structure: `weth_usdt_uniswap_v2_03.csv`
 
@@ -133,6 +241,60 @@ Uniswap V2 WETH/USDT pool (WETH=token0, USDT=token1). `slip_1k` simulates buying
 | `pool_tvl_at_block`   | float   | Total Value Locked in USD (USDT reserve + WETH reserve × price)                              |
 | `slip_1k`             | float   | Simulated cost of a 1 000 USDT→WETH swap using the V2 analytical formula                    |
 
+**Metadata d'extraction**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `extraction_run_id` | string | UUID identifiant l'exécution d'extraction (relie toutes les lignes d'une même extraction) | script-local (`uuid4`) |
+| `schema_version` | string | Version du schéma CSV (ex. `dex_uniswap_v2_v1`) | config |
+| `extraction_timestamp_utc` | string | Timestamp UTC au moment du lancement du script | script-local |
+| `client_name` | string | Nom du client Ethereum du nœud RPC | `web3_clientVersion` (avant le premier `/`) |
+| `client_version` | string | Version du client Ethereum | `web3_clientVersion` (après le premier `/`) |
+| `node_chain_id` | int | Chain ID rapporté par le nœud | `eth_chainId` |
+| `node_head_block_at_extraction` | int | Numéro du dernier bloc connu au moment de l'extraction | `eth_blockNumber` |
+| `node_sync_completion_block` | int | Bloc courant de synchronisation (= head si nœud synchronisé) | `eth_syncing` ou `eth_blockNumber` |
+| `rpc_method_used` | string | Méthodes RPC utilisées pour l'extraction | config |
+| `extraction_script_hash` | string | SHA-256 du fichier Python ayant produit ce CSV | `hashlib.sha256(open(__file__,'rb').read())` |
+| `abi_hash` | string | SHA-256 de l'ABI de l'événement Swap utilisée | `hashlib.sha256(SWAP_EVENT_ABI.encode())` |
+| `network_name` | string | Nom lisible du réseau blockchain | config |
+
+**Métadonnées de bloc et transaction**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `block_timestamp_utc` | string | Timestamp UTC du bloc (identique à `timestamp`) | `eth_getBlockByNumber` → `timestamp` |
+| `block_hash` | string | Hash du bloc | `eth_getBlockByNumber` → `hash` |
+| `transaction_index` | int | Index de la transaction dans le bloc | issu du CSV cryo (`transaction_index`) |
+| `event_signature` | string | Keccak-256 de la signature de l'événement Swap (= `topic0`) | config |
+
+**Métadonnées DEX et tokens**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `dex_protocol` | string | Protocole DEX (`uniswap`, `sushiswap`, `curve`) | config |
+| `dex_version` | string | Version du protocole (`v3`, `v2`, etc.) | config |
+| `token0_address` | string | Adresse du contrat token0 du pool | config |
+| `token1_address` | string | Adresse du contrat token1 du pool | config |
+| `token0_symbol` | string | Symbole de token0 | `eth_call:symbol()` sur le contrat ERC-20 |
+| `token1_symbol` | string | Symbole de token1 | `eth_call:symbol()` sur le contrat ERC-20 |
+| `token0_decimals` | int | Nombre de décimales de token0 | config |
+| `token1_decimals` | int | Nombre de décimales de token1 | config |
+| `amount0_raw` | int | Flux net de token0 en unités brutes (positif = entre dans le pool) | décodage ABI du log Swap |
+| `amount1_raw` | int | Flux net de token1 en unités brutes (positif = entre dans le pool) | décodage ABI du log Swap |
+| `amount0_normalized` | float | `amount0_raw / 10^token0_decimals` | calculé |
+| `amount1_normalized` | float | `amount1_raw / 10^token1_decimals` | calculé |
+| `swap_sender` | string | Adresse de l'envoyeur du swap (`sender` dans l'event) | `topic1` du log |
+| `swap_recipient` | string | Adresse du destinataire du swap (`to` dans l'event) | `topic2` du log |
+| `swap_direction` | string | Direction du swap : `token0_to_token1` ou `token1_to_token0` (déduit du signe de `amount0_raw`) | calculé |
+| `base_token_address` | string | Adresse du token de base (token pricé) | config |
+| `quote_token_address` | string | Adresse du token de cotation (référence) | config |
+| `base_token_symbol` | string | Symbole du token de base | config |
+| `quote_token_symbol` | string | Symbole du token de cotation | config |
+| `price_source_field` | string | Méthode utilisée pour calculer le prix (`sqrt_price_x96` ou `amount_ratio`) | config |
+| `pool_tvl_threshold_used` | int | Seuil de TVL (en USD ou équivalent) utilisé pour le flag `low_liquidity` | config |
+| `slip_10k` | float | Slippage simulé pour un swap de 10 000 USDT→WETH, calculé par la formule AMM V2 | calculé via formule AMM |
+| `quality_flags` | string | Drapeaux qualité séparés par `\|` : `low_liquidity`, `zero_amount`, `extreme_slippage` ; `ok` si aucun | calculé |
+
 ---
 
 ## 🗂 CSV Structure: `crvusd_weth_curve.csv`
@@ -154,6 +316,60 @@ Price derived from `TokenExchange` event amounts. TVL in crvUSD (≈ USD). `slip
 | `chain_id`               | int    | Ethereum chain ID (1 = mainnet)                                                            |
 | `pool_tvl_at_block`      | float  | Total Value Locked in crvUSD (≈ USD): crvUSD balance + WETH balance / price               |
 | `slip_1k`                | float  | Simulated cost of a 1 000 crvUSD→WETH swap via Curve `get_dy(0, 1, dx)`                   |
+
+**Metadata d'extraction**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `extraction_run_id` | string | UUID identifiant l'exécution d'extraction (relie toutes les lignes d'une même extraction) | script-local (`uuid4`) |
+| `schema_version` | string | Version du schéma CSV (ex. `dex_curve_v1`) | config |
+| `extraction_timestamp_utc` | string | Timestamp UTC au moment du lancement du script | script-local |
+| `client_name` | string | Nom du client Ethereum du nœud RPC | `web3_clientVersion` (avant le premier `/`) |
+| `client_version` | string | Version du client Ethereum | `web3_clientVersion` (après le premier `/`) |
+| `node_chain_id` | int | Chain ID rapporté par le nœud | `eth_chainId` |
+| `node_head_block_at_extraction` | int | Numéro du dernier bloc connu au moment de l'extraction | `eth_blockNumber` |
+| `node_sync_completion_block` | int | Bloc courant de synchronisation (= head si nœud synchronisé) | `eth_syncing` ou `eth_blockNumber` |
+| `rpc_method_used` | string | Méthodes RPC utilisées pour l'extraction | config |
+| `extraction_script_hash` | string | SHA-256 du fichier Python ayant produit ce CSV | `hashlib.sha256(open(__file__,'rb').read())` |
+| `abi_hash` | string | SHA-256 de l'ABI de l'événement TokenExchange utilisée | `hashlib.sha256(SWAP_EVENT_ABI.encode())` |
+| `network_name` | string | Nom lisible du réseau blockchain | config |
+
+**Métadonnées de bloc et transaction**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `block_timestamp_utc` | string | Timestamp UTC du bloc (identique à `timestamp`) | `eth_getBlockByNumber` → `timestamp` |
+| `block_hash` | string | Hash du bloc | `eth_getBlockByNumber` → `hash` |
+| `transaction_index` | int | Index de la transaction dans le bloc | issu du CSV cryo (`transaction_index`) |
+| `event_signature` | string | Keccak-256 de la signature de l'événement TokenExchange (= `topic0`) | config |
+
+**Métadonnées DEX et tokens**
+
+| Colonne | Type | Description | Méthode |
+|---------|------|-------------|---------|
+| `dex_protocol` | string | Protocole DEX (`curve`) | config |
+| `dex_version` | string | Version du protocole (vide pour Curve) | config |
+| `token0_address` | string | Adresse du contrat token0 du pool (crvUSD) | config |
+| `token1_address` | string | Adresse du contrat token1 du pool (WETH) | config |
+| `token0_symbol` | string | Symbole de token0 | `eth_call:symbol()` sur le contrat ERC-20 |
+| `token1_symbol` | string | Symbole de token1 | `eth_call:symbol()` sur le contrat ERC-20 |
+| `token0_decimals` | int | Nombre de décimales de token0 | config |
+| `token1_decimals` | int | Nombre de décimales de token1 | config |
+| `amount0_raw` | int | Flux net de token0 (crvUSD) en unités brutes (positif = entre dans le pool) | décodage ABI du log TokenExchange |
+| `amount1_raw` | int | Flux net de token1 (WETH) en unités brutes (positif = entre dans le pool) | décodage ABI du log TokenExchange |
+| `amount0_normalized` | float | `amount0_raw / 10^token0_decimals` (identique à `crvusd_amount`) | calculé |
+| `amount1_normalized` | float | `amount1_raw / 10^token1_decimals` (identique à `weth_amount`) | calculé |
+| `swap_sender` | string | Adresse de l'acheteur (`buyer` dans l'event) | `topic1` du log |
+| `swap_recipient` | string | Toujours `None` — l'event `TokenExchange` Curve n'a pas de champ recipient | N/A |
+| `swap_direction` | string | Direction du swap : `token0_to_token1` ou `token1_to_token0` (déduit de `sold_id`) | calculé |
+| `base_token_address` | string | Adresse du token de base (crvUSD) | config |
+| `quote_token_address` | string | Adresse du token de cotation (WETH) | config |
+| `base_token_symbol` | string | Symbole du token de base | config |
+| `quote_token_symbol` | string | Symbole du token de cotation | config |
+| `price_source_field` | string | Méthode utilisée pour calculer le prix (`amount_ratio`) | config |
+| `pool_tvl_threshold_used` | int | Seuil de TVL (en USD ou équivalent) utilisé pour le flag `low_liquidity` | config |
+| `slip_10k` | float | Slippage simulé pour un swap de 10 000 crvUSD→WETH via Curve `get_dy(0, 1, dx)` | calculé via `get_dy` |
+| `quality_flags` | string | Drapeaux qualité séparés par `\|` : `low_liquidity`, `zero_amount`, `extreme_slippage` ; `ok` si aucun | calculé |
 
 ---
 

@@ -8,12 +8,14 @@
 
 import pandas as pd
 from web3 import Web3
-from datetime import datetime
+from datetime import datetime, timezone
 from mpmath import mp
 import os
 import sys
 import glob
 import pytz
+import uuid
+import hashlib
 
 mp.dps = 50
 
@@ -46,10 +48,55 @@ GET_DY_ABI = [
     }
 ]
 
+SCHEMA_VERSION          = "dex_curve_v1"
+DEX_PROTOCOL            = "curve"
+DEX_VERSION             = ""
+NETWORK_NAME            = "ethereum_mainnet"
+RPC_METHOD_USED         = "eth_getLogs+eth_getBlockByNumber+eth_call"
+POOL_TVL_THRESHOLD_USED = 10000
+BASE_TOKEN_ADDRESS      = TOKEN0_ADDRESS   # crvUSD
+QUOTE_TOKEN_ADDRESS     = TOKEN1_ADDRESS   # WETH
+BASE_TOKEN_SYMBOL       = "crvUSD"
+QUOTE_TOKEN_SYMBOL      = "WETH"
+PRICE_SOURCE_FIELD      = "amount_ratio"
+EVENT_SIGNATURE         = EXPECTED_TOPIC0
+SWAP_EVENT_ABI          = '[{"name":"TokenExchange","inputs":[{"name":"buyer","type":"address","indexed":true},{"name":"sold_id","type":"int128","indexed":false},{"name":"tokens_sold","type":"uint256","indexed":false},{"name":"bought_id","type":"int128","indexed":false},{"name":"tokens_bought","type":"uint256","indexed":false}],"anonymous":false,"type":"event"}]'
+ERC20_SYMBOL_ABI        = [{"name":"symbol","type":"function","inputs":[],"outputs":[{"name":"","type":"string"}],"stateMutability":"view"}]
+
+extraction_run_id        = str(uuid.uuid4())
+extraction_timestamp_utc = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S+00:00')
+abi_hash                 = hashlib.sha256(SWAP_EVENT_ABI.encode()).hexdigest()
+with open(__file__, 'rb') as _f:
+    extraction_script_hash = hashlib.sha256(_f.read()).hexdigest()
+
 here = os.path.dirname(__file__)
 data_dir = os.path.normpath(os.path.join(here, os.pardir, 'data', 'output'))
 pattern = os.path.join(data_dir, '*.csv')
 csv_files = glob.glob(pattern)
+
+
+def get_token_symbol(web3, token_address):
+    try:
+        c = web3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_SYMBOL_ABI)
+        return c.functions.symbol().call()
+    except Exception:
+        return "unknown"
+
+def decode_address_topic(topic_hex):
+    if not topic_hex or str(topic_hex).lower() in ('', 'nan', 'none'):
+        return None
+    h = str(topic_hex).replace('0x', '').replace('0X', '')
+    return ('0x' + h[-40:]) if len(h) >= 40 else None
+
+def compute_quality_flags(pool_tvl, amount0_raw, amount1_raw, slip_1k, threshold):
+    flags = []
+    if pool_tvl is not None and pool_tvl < threshold:
+        flags.append("low_liquidity")
+    if amount0_raw == 0 or amount1_raw == 0:
+        flags.append("zero_amount")
+    if slip_1k is not None and abs(slip_1k) > 0.05:
+        flags.append("extreme_slippage")
+    return '|'.join(flags) if flags else "ok"
 
 
 def decode_swap_event(data_hex):
@@ -69,12 +116,16 @@ def decode_swap_event(data_hex):
             # crvUSD sold → WETH bought
             crvusd_amount = sold_dec
             weth_amount   = -bought_dec
+            amount0_raw_int = int(tokens_sold)    # crvUSD entre dans le pool
+            amount1_raw_int = -int(tokens_bought)  # WETH sort du pool
         else:
             # WETH sold → crvUSD bought
             crvusd_amount = -bought_dec
             weth_amount   = sold_dec
+            amount0_raw_int = -int(tokens_bought)  # crvUSD sort du pool
+            amount1_raw_int = int(tokens_sold)     # WETH entre dans le pool
 
-        return crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought
+        return crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought, amount0_raw_int, amount1_raw_int
     except Exception as e:
         print(f"Erreur dans decode_swap_event: {e}")
         print(f"Data hex reçue: {data_hex}")
@@ -132,6 +183,23 @@ def get_slip_1k(web3, block_number, price_weth_per_crvusd):
         return None
 
 
+def get_slip_10k(web3, block_number, price_weth_per_crvusd):
+    try:
+        pool = web3.eth.contract(
+            address=Web3.to_checksum_address(POOL_ADDRESS), abi=GET_DY_ABI
+        )
+        amount_in = 10000 * 10**TOKEN0_DECIMALS
+        weth_out_raw = pool.functions.get_dy(0, 1, amount_in).call(
+            block_identifier=block_number
+        )
+        weth_received = mp.mpf(weth_out_raw) / 10**TOKEN1_DECIMALS
+        expected_weth = mp.mpf(10000) * price_weth_per_crvusd
+        return float(1 - weth_received / expected_weth)
+    except Exception as e:
+        print(f"Erreur slip_10k au bloc {block_number}: {e}")
+        return None
+
+
 def process_curve_logs(csv_path, web3):
     try:
         print(f"Lecture du fichier: {csv_path}")
@@ -143,15 +211,29 @@ def process_curve_logs(csv_path, web3):
 
         df = df.sort_values(["block_number", "log_index"], ignore_index=True)
         chain_id_rpc = web3.eth.chain_id
+
+        node_head_block_at_extraction = web3.eth.block_number
+        sync_status = web3.eth.syncing
+        node_sync_completion_block = node_head_block_at_extraction if sync_status is False else sync_status.get('currentBlock', node_head_block_at_extraction)
+        try:
+            _cv = web3.client_version.split('/')
+            client_name = _cv[0]
+            client_version_str = _cv[1] if len(_cv) > 1 else "unknown"
+        except Exception:
+            client_name = "unknown"
+            client_version_str = "unknown"
+        token0_symbol = get_token_symbol(web3, TOKEN0_ADDRESS)
+        token1_symbol = get_token_symbol(web3, TOKEN1_ADDRESS)
+
         block_numbers = list(set(df['block_number'].tolist()))
         blocks = {}
         for bn in block_numbers:
             try:
                 block = web3.eth.get_block(bn)
-                blocks[bn] = datetime.fromtimestamp(block['timestamp'], tz=pytz.UTC)
+                blocks[bn] = (datetime.fromtimestamp(block['timestamp'], tz=pytz.UTC), block['hash'].hex())
             except Exception as e:
                 print(f"Erreur bloc {bn}: {e}")
-                blocks[bn] = None
+                blocks[bn] = (None, None)
 
         rows = []
         block_last_price = {}
@@ -164,13 +246,19 @@ def process_curve_logs(csv_path, web3):
                 log_address = str(row.get("address", "")).lower()
                 if log_address and log_address != POOL_ADDRESS.lower():
                     continue
-                crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought = decode_swap_event(row['data'])
+                crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought, amount0_raw, amount1_raw = decode_swap_event(row['data'])
                 price, volume = calculate_price(crvusd_amount, weth_amount)
-                timestamp = blocks.get(row['block_number'])
-                if not timestamp:
+                block_info = blocks.get(row['block_number'])
+                if not block_info or not block_info[0]:
                     continue
+                timestamp, block_hash = block_info
                 bn = row['block_number']
                 block_last_price[bn] = price
+
+                swap_direction = "token0_to_token1" if sold_id == 0 else "token1_to_token0"
+                swap_sender    = decode_address_topic(row.get('topic1'))
+                swap_recipient = None  # Curve n'a pas de recipient dans le log
+
                 rows.append({
                     'timestamp':              timestamp,
                     'price_weth_per_crvusd':  price,
@@ -182,6 +270,46 @@ def process_curve_logs(csv_path, web3):
                     'log_index':               row.get('log_index'),
                     'pool_address':            row.get('address', POOL_ADDRESS),
                     'chain_id':                row.get('chain_id', chain_id_rpc),
+                    # --- Nouveaux champs metadata extraction ---
+                    'extraction_run_id':              extraction_run_id,
+                    'schema_version':                 SCHEMA_VERSION,
+                    'extraction_timestamp_utc':       extraction_timestamp_utc,
+                    'client_name':                    client_name,
+                    'client_version':                 client_version_str,
+                    'node_chain_id':                  chain_id_rpc,
+                    'node_head_block_at_extraction':  node_head_block_at_extraction,
+                    'node_sync_completion_block':     node_sync_completion_block,
+                    'rpc_method_used':                RPC_METHOD_USED,
+                    'extraction_script_hash':         extraction_script_hash,
+                    'abi_hash':                       abi_hash,
+                    'network_name':                   NETWORK_NAME,
+                    # --- Nouveaux champs bloc/transaction ---
+                    'block_timestamp_utc':            str(timestamp),
+                    'block_hash':                     block_hash,
+                    'transaction_index':              row.get('transaction_index'),
+                    'event_signature':                EVENT_SIGNATURE,
+                    # --- Nouveaux champs DEX ---
+                    'dex_protocol':                   DEX_PROTOCOL,
+                    'dex_version':                    DEX_VERSION,
+                    'token0_address':                 TOKEN0_ADDRESS,
+                    'token1_address':                 TOKEN1_ADDRESS,
+                    'token0_symbol':                  token0_symbol,
+                    'token1_symbol':                  token1_symbol,
+                    'token0_decimals':                TOKEN0_DECIMALS,
+                    'token1_decimals':                TOKEN1_DECIMALS,
+                    'amount0_raw':                    amount0_raw,
+                    'amount1_raw':                    amount1_raw,
+                    'amount0_normalized':             float(mp.mpf(amount0_raw) / 10**TOKEN0_DECIMALS),
+                    'amount1_normalized':             float(mp.mpf(amount1_raw) / 10**TOKEN1_DECIMALS),
+                    'swap_sender':                    swap_sender,
+                    'swap_recipient':                 swap_recipient,
+                    'swap_direction':                 swap_direction,
+                    'base_token_address':             BASE_TOKEN_ADDRESS,
+                    'quote_token_address':            QUOTE_TOKEN_ADDRESS,
+                    'base_token_symbol':              BASE_TOKEN_SYMBOL,
+                    'quote_token_symbol':             QUOTE_TOKEN_SYMBOL,
+                    'price_source_field':             PRICE_SOURCE_FIELD,
+                    'pool_tvl_threshold_used':        POOL_TVL_THRESHOLD_USED,
                 })
             except Exception as e:
                 print(f"Erreur ligne {index}: {e}")
@@ -193,15 +321,22 @@ def process_curve_logs(csv_path, web3):
 
         unique_blocks = list(block_last_price.keys())
         print(f"\nCal TVL et slip_1k pour {len(unique_blocks)} blocs uniques...")
-        tvl_cache  = {}
-        slip_cache = {}
+        tvl_cache   = {}
+        slip_cache  = {}
+        slip10k_cache = {}
         for bn in unique_blocks:
             price_ref = block_last_price[bn]
-            tvl_cache[bn]  = get_tvl_at_block(web3, bn, price_ref)
-            slip_cache[bn] = get_slip_1k(web3, bn, price_ref)
+            tvl_cache[bn]     = get_tvl_at_block(web3, bn, price_ref)
+            slip_cache[bn]    = get_slip_1k(web3, bn, price_ref)
+            slip10k_cache[bn] = get_slip_10k(web3, bn, price_ref)
         for r in rows:
             r['pool_tvl_at_block'] = tvl_cache.get(r['block_number'])
             r['slip_1k']           = slip_cache.get(r['block_number'])
+            r['slip_10k']          = slip10k_cache.get(r['block_number'])
+            r['quality_flags']     = compute_quality_flags(
+                r['pool_tvl_at_block'], r['amount0_raw'], r['amount1_raw'],
+                r['slip_1k'], POOL_TVL_THRESHOLD_USED
+            )
 
         result_df = pd.DataFrame(rows)
         print(f"\nDataFrame créé avec {len(result_df)} lignes")

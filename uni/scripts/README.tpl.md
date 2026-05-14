@@ -71,6 +71,8 @@ Open Price UNI is an open-data initiative providing a standardized, continuously
 
 ## 🗂 CSV Structure: `uni_usdc_uniswap_v3_03.csv`
 
+**Core price data**
+
 | Column               | Type    | Description                                                                                  |
 |----------------------|---------|----------------------------------------------------------------------------------------------|
 | `timestamp`          | string  | UTC timestamp of the block, e.g. `2024-04-19 23:59:59+00:00`                                |
@@ -90,21 +92,74 @@ Open Price UNI is an open-data initiative providing a standardized, continuously
 | `pool_tvl_at_block`  | float   | Total Value Locked in USD at the swap block (USDC balance + UNI balance × price)            |
 | `slip_1k`            | float   | Simulated cost of a 1 000 USDC→UNI swap: price impact + fee tier (via QuoterV2). `None` for pre-2022 blocks (QuoterV2 not yet deployed). |
 
+**Extraction metadata**
+
+| Column | Type | Description | Method |
+|--------|------|-------------|--------|
+| `extraction_run_id` | string | UUID v4 unique identifier for this extraction run | `uuid.uuid4()` at script load |
+| `schema_version` | string | Schema version string identifying the CSV format (`dex_uniswap_v3_v1`) | constant defined in script |
+| `extraction_timestamp_utc` | string | UTC timestamp when the extraction was executed (`YYYY-MM-DD HH:MM:SS+00:00`) | `datetime.now(timezone.utc)` at script load |
+| `client_name` | string | Ethereum node client name | `web3_clientVersion` RPC call, first segment before `/` |
+| `client_version` | string | Ethereum node client version | `web3_clientVersion` RPC call, second segment |
+| `node_chain_id` | int | Chain ID reported by the connected node | `eth_chainId` RPC call |
+| `node_head_block_at_extraction` | int | Block number at the head of the chain at extraction time | `eth_blockNumber` RPC call |
+| `node_sync_completion_block` | int | Last synced block; equals head block if fully synced | `eth_syncing` RPC call |
+| `rpc_method_used` | string | RPC methods used during extraction | constant defined in script |
+| `extraction_script_hash` | string | SHA-256 hash of the extraction script for reproducibility | `hashlib.sha256` on the script file bytes |
+| `abi_hash` | string | SHA-256 hash of the Swap event ABI used | `hashlib.sha256` on the ABI string |
+| `network_name` | string | Blockchain network name (`ethereum_mainnet`) | constant defined in script |
+
+**Block and transaction metadata**
+
+| Column | Type | Description | Method |
+|--------|------|-------------|--------|
+| `block_timestamp_utc` | string | UTC timestamp of the block containing the swap | `eth_getBlockByNumber` → `timestamp` field |
+| `block_hash` | string | Hash of the block containing the swap | `eth_getBlockByNumber` → `hash` field |
+| `transaction_index` | int | Index of the transaction within its block | included in cryo CSV output |
+| `event_signature` | string | Keccak-256 topic0 of the Swap event | constant (matches `topic0` in cryo CSV) |
+
+**DEX and token metadata**
+
+| Column | Type | Description | Method |
+|--------|------|-------------|--------|
+| `dex_protocol` | string | DEX protocol name (`uniswap`) | constant defined in script |
+| `dex_version` | string | DEX protocol version (`v3`) | constant defined in script |
+| `token0_address` | string | On-chain address of token0 (UNI) | constant defined in script |
+| `token1_address` | string | On-chain address of token1 (USDC) | constant defined in script |
+| `token0_symbol` | string | Symbol of token0 | ERC-20 `symbol()` call |
+| `token1_symbol` | string | Symbol of token1 | ERC-20 `symbol()` call |
+| `token0_decimals` | int | Decimal places for token0 (18) | constant defined in script |
+| `token1_decimals` | int | Decimal places for token1 (6) | constant defined in script |
+| `amount0_raw` | int | Raw signed integer amount for token0 in the swap (positive = token0 in, negative = token0 out) | decoded from swap event data |
+| `amount1_raw` | int | Raw signed integer amount for token1 in the swap | decoded from swap event data |
+| `amount0_normalized` | float | `amount0_raw` divided by `10^token0_decimals` | high-precision arithmetic via `mpmath` |
+| `amount1_normalized` | float | `amount1_raw` divided by `10^token1_decimals` | high-precision arithmetic via `mpmath` |
+| `swap_sender` | string | Address that initiated the swap (msg.sender) | decoded from indexed topic1 in cryo CSV |
+| `swap_recipient` | string | Address that received the output tokens | decoded from indexed topic2 in cryo CSV |
+| `swap_direction` | string | Direction of the swap: `token0_to_token1` if `amount0_raw > 0`, else `token1_to_token0` | sign of `amount0_raw` |
+| `base_token_address` | string | On-chain address of the base token (UNI) | constant defined in script |
+| `quote_token_address` | string | On-chain address of the quote token (USDC) | constant defined in script |
+| `base_token_symbol` | string | Symbol of the base token (`UNI`) | constant defined in script |
+| `quote_token_symbol` | string | Symbol of the quote token (`USDC`) | constant defined in script |
+| `price_source_field` | string | Field used to derive the price (`sqrt_price_x96`) | constant defined in script |
+| `pool_tvl_threshold_used` | int | Minimum TVL threshold (in USD) used for quality flagging (10000) | constant defined in script |
+| `quality_flags` | string | Pipe-separated quality flags: `low_liquidity` (TVL < threshold), `zero_amount` (either amount is 0), `extreme_slippage` (\|slip_1k\| > 0.05), or `ok` | computed from TVL, amounts, and slippage values |
+
 ## 🗂 CSV Structure: `uni_usdt_uniswap_v3_03.csv`
 
-Same structure as `uni_usdc_uniswap_v3_03.csv` with USDT replacing USDC (`price_usdt_per_uni`, `usdt_amount`, `volume_usdt`, `slip_1k` = 1 000 USDT→UNI).
+Same structure as `uni_usdc_uniswap_v3_03.csv` with USDT replacing USDC (`price_usdt_per_uni`, `usdt_amount`, `volume_usdt`, `slip_1k` = 1 000 USDT→UNI). All extraction metadata, block/transaction metadata, and DEX/token metadata columns are identical. `quote_token_symbol` = `USDT`.
 
-## 🗂 CSV Structure: `uni_weth_uniswap_v3_03.csv` and `uni_eth_sushiswap_v3_03.csv`
+## 🗂 CSV Structure: `uni_weth_uniswap_v3_03.csv`
 
-Uniswap V3 and SushiSwap V3 UNI/WETH pools. TVL and volume expressed in WETH. `slip_1k` simulates buying UNI with 1 WETH.
+Uniswap V3 UNI/WETH pool. TVL and volume expressed in WETH. `slip_1k` simulates buying UNI with 1 WETH.
 
 | Column               | Type    | Description                                                                                  |
 |----------------------|---------|----------------------------------------------------------------------------------------------|
 | `timestamp`          | string  | UTC timestamp of the block                                                                   |
-| `price_weth_per_uni` | float   | UNI price in WETH (`sqrtP²`, both tokens at 18 dec). Column named `price_eth_per_uni` in the SushiSwap variant. |
-| `weth_amount`        | float   | WETH leg of the swap (signed). Named `eth_amount` in SushiSwap variant.                      |
+| `price_weth_per_uni` | float   | UNI price in WETH (`sqrtP²`, both tokens at 18 dec)                                         |
+| `weth_amount`        | float   | WETH leg of the swap (signed)                                                                |
 | `uni_amount`         | float   | UNI leg of the swap (signed)                                                                 |
-| `volume_weth`        | float   | Trade notional in WETH. Named `volume_eth` in SushiSwap variant.                             |
+| `volume_weth`        | float   | Trade notional in WETH — `abs(weth_amount)`                                                  |
 | `block_number`       | int     | Ethereum block number                                                                        |
 | `transaction_hash`   | string  | Transaction hash                                                                             |
 | `log_index`          | int     | Log index within the block                                                                   |
@@ -117,9 +172,37 @@ Uniswap V3 and SushiSwap V3 UNI/WETH pools. TVL and volume expressed in WETH. `s
 | `pool_tvl_at_block`  | float   | Total Value Locked in WETH (WETH balance + UNI balance × price)                              |
 | `slip_1k`            | float   | Simulated cost of a 1 WETH→UNI swap (via QuoterV2)                                          |
 
+All extraction metadata, block/transaction metadata, and DEX/token metadata columns are identical to those described for `uni_usdc_uniswap_v3_03.csv` above. `quote_token_symbol` = `WETH`, `pool_tvl_threshold_used` = 10000 (WETH).
+
+## 🗂 CSV Structure: `uni_eth_sushiswap_v3_03.csv`
+
+SushiSwap V3 UNI/ETH pool (Uniswap V3 fork — same ABI and Swap event). TVL and volume expressed in ETH. `slip_1k` simulates buying UNI with 1 ETH; `slip_10k` with 10 ETH via the SushiSwap QuoterV2.
+
+| Column               | Type    | Description                                                                                  |
+|----------------------|---------|----------------------------------------------------------------------------------------------|
+| `timestamp`          | string  | UTC timestamp of the block                                                                   |
+| `price_eth_per_uni`  | float   | UNI price in ETH (`sqrtP²`, both tokens at 18 dec)                                          |
+| `eth_amount`         | float   | ETH/WETH leg of the swap (signed)                                                            |
+| `uni_amount`         | float   | UNI leg of the swap (signed)                                                                 |
+| `volume_eth`         | float   | Trade notional in ETH — `abs(eth_amount)`                                                    |
+| `block_number`       | int     | Ethereum block number                                                                        |
+| `transaction_hash`   | string  | Transaction hash                                                                             |
+| `log_index`          | int     | Log index within the block                                                                   |
+| `pool_address`       | string  | Pool contract address                                                                        |
+| `pool_fee_tier`      | int     | Pool fee tier (3000 = 0.3%)                                                                  |
+| `chain_id`           | int     | Ethereum chain ID (1 = mainnet)                                                              |
+| `sqrt_price_x96`     | uint160 | Raw `sqrtPriceX96` value from the Swap event                                                 |
+| `liquidity`          | uint128 | Active in-range liquidity at the time of the swap                                            |
+| `tick`               | int24   | Current tick at the time of the swap                                                         |
+| `pool_tvl_at_block`  | float   | Total Value Locked in ETH (WETH balance + UNI balance × price)                               |
+| `slip_1k`            | float   | Simulated cost of a 1 ETH→UNI swap (via SushiSwap QuoterV2)                                 |
+| `slip_10k`           | float   | Simulated cost of a 10 ETH→UNI swap (via SushiSwap QuoterV2)                                |
+
+All extraction metadata, block/transaction metadata, and DEX/token metadata columns are identical to those described for `uni_usdc_uniswap_v3_03.csv` above, with `dex_protocol` = `sushiswap`, `schema_version` = `dex_sushiswap_v3_v1`, `quote_token_symbol` = `WETH`.
+
 ## 🗂 CSV Structure: `uni_weth_uniswap_v2_03.csv`
 
-Uniswap V2 UNI/WETH pool. Price derived from swap amounts; reserves from `getReserves()`. `slip_1k` uses the V2 analytical formula.
+Uniswap V2 UNI/WETH pool. Price derived from swap amounts; reserves from `getReserves()`. `slip_1k` uses the V2 analytical AMM formula.
 
 | Column               | Type    | Description                                                                                  |
 |----------------------|---------|----------------------------------------------------------------------------------------------|
@@ -138,6 +221,8 @@ Uniswap V2 UNI/WETH pool. Price derived from swap amounts; reserves from `getRes
 | `reserve1`           | uint112 | Raw token1 (WETH) reserve at the swap block                                                  |
 | `pool_tvl_at_block`  | float   | Total Value Locked in WETH (WETH reserve + UNI reserve × price)                              |
 | `slip_1k`            | float   | Simulated cost of a 1 WETH→UNI swap using the V2 analytical formula                         |
+
+All extraction metadata, block/transaction metadata, and DEX/token metadata columns are identical to those described for `uni_usdc_uniswap_v3_03.csv` above, with `dex_version` = `v2`, `schema_version` = `dex_uniswap_v2_v1`, `price_source_field` = `amount_ratio`. Note: `swap_recipient` is decoded from topic2 (the `to` field in the V2 Swap event is indexed).
 
 ---
 

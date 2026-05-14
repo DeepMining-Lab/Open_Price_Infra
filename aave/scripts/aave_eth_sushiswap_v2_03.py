@@ -3,12 +3,14 @@
 
 import pandas as pd
 from web3 import Web3
-from datetime import datetime
+from datetime import datetime, timezone
 from mpmath import mp
 import os
 import sys
 import glob
 import pytz
+import uuid
+import hashlib
 
 mp.dps = 50
 
@@ -27,10 +29,56 @@ TOKEN0_DECIMALS = 18  # AAVE
 TOKEN1_DECIMALS = 18  # WETH
 POOL_FEE_TIER   = 3000
 
+SWAP_EVENT_ABI = '[{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":false,"name":"amount0In","type":"uint256"},{"indexed":false,"name":"amount1In","type":"uint256"},{"indexed":false,"name":"amount0Out","type":"uint256"},{"indexed":false,"name":"amount1Out","type":"uint256"},{"indexed":true,"name":"to","type":"address"}],"name":"Swap","type":"event"}]'
+ERC20_SYMBOL_ABI = [{"name":"symbol","type":"function","inputs":[],"outputs":[{"name":"","type":"string"}],"stateMutability":"view"}]
+
+SCHEMA_VERSION          = "dex_sushiswap_v2_v1"
+DEX_PROTOCOL            = "sushiswap"
+DEX_VERSION             = "v2"
+BASE_TOKEN_ADDRESS      = TOKEN0_ADDRESS   # AAVE
+QUOTE_TOKEN_ADDRESS     = TOKEN1_ADDRESS   # WETH
+BASE_TOKEN_SYMBOL       = "AAVE"
+QUOTE_TOKEN_SYMBOL      = "WETH"
+PRICE_SOURCE_FIELD      = "amount_ratio"
+NETWORK_NAME            = "ethereum_mainnet"
+RPC_METHOD_USED         = "eth_getLogs+eth_getBlockByNumber+eth_call"
+POOL_TVL_THRESHOLD_USED = 10000
+EVENT_SIGNATURE         = EXPECTED_TOPIC0
+
+extraction_run_id        = str(uuid.uuid4())
+extraction_timestamp_utc = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S+00:00')
+abi_hash                 = hashlib.sha256(SWAP_EVENT_ABI.encode()).hexdigest()
+with open(__file__, 'rb') as _f:
+    extraction_script_hash = hashlib.sha256(_f.read()).hexdigest()
+
 here = os.path.dirname(__file__)
 data_dir = os.path.normpath(os.path.join(here, os.pardir, 'data', 'output'))
 pattern = os.path.join(data_dir, '*.csv')
 csv_files = glob.glob(pattern)
+
+
+def get_token_symbol(web3, token_address):
+    try:
+        c = web3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_SYMBOL_ABI)
+        return c.functions.symbol().call()
+    except Exception:
+        return "unknown"
+
+def decode_address_topic(topic_hex):
+    if not topic_hex or str(topic_hex).lower() in ('', 'nan', 'none'):
+        return None
+    h = str(topic_hex).replace('0x', '').replace('0X', '')
+    return ('0x' + h[-40:]) if len(h) >= 40 else None
+
+def compute_quality_flags(pool_tvl, amount0_raw, amount1_raw, slip_1k, threshold):
+    flags = []
+    if pool_tvl is not None and pool_tvl < threshold:
+        flags.append("low_liquidity")
+    if amount0_raw == 0 or amount1_raw == 0:
+        flags.append("zero_amount")
+    if slip_1k is not None and abs(slip_1k) > 0.05:
+        flags.append("extreme_slippage")
+    return '|'.join(flags) if flags else "ok"
 
 
 def decode_swap_event(data_hex):
@@ -42,7 +90,9 @@ def decode_swap_event(data_hex):
         amount1Out = int(data[192:256], 16)
         net0 = mp.mpf(amount0In - amount0Out) / 10**TOKEN0_DECIMALS  # AAVE
         net1 = mp.mpf(amount1In - amount1Out) / 10**TOKEN1_DECIMALS  # WETH
-        return net0, net1
+        amount0_raw_int = amount0In - amount0Out
+        amount1_raw_int = amount1In - amount1Out
+        return net0, net1, amount0_raw_int, amount1_raw_int
     except Exception as e:
         print(f"Erreur dans decode_swap_event: {e}")
         print(f"Data hex reçue: {data_hex}")
@@ -106,15 +156,29 @@ def process_swap_logs(csv_path, web3):
 
         df = df.sort_values(["block_number", "log_index"], ignore_index=True)
         chain_id_rpc = web3.eth.chain_id
+
+        node_head_block_at_extraction = web3.eth.block_number
+        sync_status = web3.eth.syncing
+        node_sync_completion_block = node_head_block_at_extraction if sync_status is False else sync_status.get('currentBlock', node_head_block_at_extraction)
+        try:
+            _cv = web3.client_version.split('/')
+            client_name = _cv[0]
+            client_version_str = _cv[1] if len(_cv) > 1 else "unknown"
+        except Exception:
+            client_name = "unknown"
+            client_version_str = "unknown"
+        token0_symbol = get_token_symbol(web3, TOKEN0_ADDRESS)
+        token1_symbol = get_token_symbol(web3, TOKEN1_ADDRESS)
+
         block_numbers = list(set(df['block_number'].tolist()))
         blocks = {}
         for bn in block_numbers:
             try:
                 block = web3.eth.get_block(bn)
-                blocks[bn] = datetime.fromtimestamp(block['timestamp'], tz=pytz.UTC)
+                blocks[bn] = (datetime.fromtimestamp(block['timestamp'], tz=pytz.UTC), block['hash'].hex())
             except Exception as e:
                 print(f"Erreur bloc {bn}: {e}")
-                blocks[bn] = None
+                blocks[bn] = (None, None)
 
         rows = []
         block_last_price = {}
@@ -127,13 +191,21 @@ def process_swap_logs(csv_path, web3):
                 log_address = str(row.get("address", "")).lower()
                 if log_address and log_address != POOL_ADDRESS.lower():
                     continue
-                net0_aave, net1_weth = decode_swap_event(row['data'])
+                net0_aave, net1_weth, amount0_raw, amount1_raw = decode_swap_event(row['data'])
                 price, volume = calculate_price(net0_aave, net1_weth)
-                timestamp = blocks.get(row['block_number'])
-                if not timestamp:
+
+                block_info = blocks.get(row['block_number'])
+                if not block_info or not block_info[0]:
                     continue
+                timestamp, block_hash = block_info
+
                 bn = row['block_number']
                 block_last_price[bn] = price
+
+                swap_direction = "token0_to_token1" if amount0_raw > 0 else "token1_to_token0"
+                swap_sender    = decode_address_topic(row.get('topic1'))
+                swap_recipient = decode_address_topic(row.get('topic2'))
+
                 rows.append({
                     'timestamp':           timestamp,
                     'price_eth_per_aave':  price,
@@ -146,6 +218,43 @@ def process_swap_logs(csv_path, web3):
                     'pool_address':        row.get('address', POOL_ADDRESS),
                     'pool_fee_tier':       POOL_FEE_TIER,
                     'chain_id':            row.get('chain_id', chain_id_rpc),
+                    'extraction_run_id':              extraction_run_id,
+                    'schema_version':                 SCHEMA_VERSION,
+                    'extraction_timestamp_utc':       extraction_timestamp_utc,
+                    'client_name':                    client_name,
+                    'client_version':                 client_version_str,
+                    'node_chain_id':                  chain_id_rpc,
+                    'node_head_block_at_extraction':  node_head_block_at_extraction,
+                    'node_sync_completion_block':     node_sync_completion_block,
+                    'rpc_method_used':                RPC_METHOD_USED,
+                    'extraction_script_hash':         extraction_script_hash,
+                    'abi_hash':                       abi_hash,
+                    'network_name':                   NETWORK_NAME,
+                    'block_timestamp_utc':            str(timestamp),
+                    'block_hash':                     block_hash,
+                    'transaction_index':              row.get('transaction_index'),
+                    'event_signature':                EVENT_SIGNATURE,
+                    'dex_protocol':                   DEX_PROTOCOL,
+                    'dex_version':                    DEX_VERSION,
+                    'token0_address':                 TOKEN0_ADDRESS,
+                    'token1_address':                 TOKEN1_ADDRESS,
+                    'token0_symbol':                  token0_symbol,
+                    'token1_symbol':                  token1_symbol,
+                    'token0_decimals':                TOKEN0_DECIMALS,
+                    'token1_decimals':                TOKEN1_DECIMALS,
+                    'amount0_raw':                    amount0_raw,
+                    'amount1_raw':                    amount1_raw,
+                    'amount0_normalized':             float(mp.mpf(amount0_raw) / 10**TOKEN0_DECIMALS),
+                    'amount1_normalized':             float(mp.mpf(amount1_raw) / 10**TOKEN1_DECIMALS),
+                    'swap_sender':                    swap_sender,
+                    'swap_recipient':                 swap_recipient,
+                    'swap_direction':                 swap_direction,
+                    'base_token_address':             BASE_TOKEN_ADDRESS,
+                    'quote_token_address':            QUOTE_TOKEN_ADDRESS,
+                    'base_token_symbol':              BASE_TOKEN_SYMBOL,
+                    'quote_token_symbol':             QUOTE_TOKEN_SYMBOL,
+                    'price_source_field':             PRICE_SOURCE_FIELD,
+                    'pool_tvl_threshold_used':        POOL_TVL_THRESHOLD_USED,
                 })
             except Exception as e:
                 print(f"Erreur ligne {index}: {e}")
@@ -170,6 +279,7 @@ def process_swap_logs(csv_path, web3):
                 reserve_cache[bn] = (None, None)
             tvl_cache[bn]  = get_tvl_at_block(web3, bn, price_ref)
             slip_cache[bn] = get_slip_1k(web3, bn, price_ref)
+
         for r in rows:
             bn = r['block_number']
             r0, r1 = reserve_cache.get(bn, (None, None))
@@ -177,6 +287,10 @@ def process_swap_logs(csv_path, web3):
             r['reserve1']          = r1
             r['pool_tvl_at_block'] = tvl_cache.get(bn)
             r['slip_1k']           = slip_cache.get(bn)
+            r['quality_flags']     = compute_quality_flags(
+                r['pool_tvl_at_block'], r['amount0_raw'], r['amount1_raw'],
+                r['slip_1k'], POOL_TVL_THRESHOLD_USED
+            )
 
         result_df = pd.DataFrame(rows)
         print(f"\nDataFrame créé avec {len(result_df)} lignes")
