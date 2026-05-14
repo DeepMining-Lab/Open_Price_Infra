@@ -61,9 +61,9 @@ OUTPUT_PATH = TEMPLATE_DIR.parent / "README.md"
 data_info = {
     "chainlink": {
         "path": TEMPLATE_DIR.parent / "data" / "chainlink_gno_usd.csv",
-        "col_name": "datetime_utc",
-        "fmt": "%Y-%m-%d %H:%M:%S",
-        "tz_aware": False,  # on récupère un datetime UTC naïf
+        "col_name": "round_updated_at_utc",
+        "fmt": "%Y-%m-%d %H:%M:%S%z",
+        "tz_aware": True,
     },
 }
 

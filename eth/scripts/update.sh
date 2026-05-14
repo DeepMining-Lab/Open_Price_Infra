@@ -69,7 +69,7 @@ else
 fi
 
 last_iso_chainlink=$(tail -n 1 "$DATA_FILE_CHAINLINK" | cut -d',' -f4)
-if [[ "$last_iso_chainlink" == "datetime_utc" ]] || [[ -z "$last_iso_chainlink" ]]; then
+if [[ "$last_iso_chainlink" == "round_updated_at_utc" ]] || [[ -z "$last_iso_chainlink" ]]; then
   start_ts_chainlink=1546300800
   echo "[INFO] CSV Chainlink vide, démarrage depuis la date par défaut."
 else

@@ -56,11 +56,16 @@ echo "[INFO] Fichier de données: $DATA_FILE_CHAINLINK"
 
 # Récupérer et ajouter +1 seconde à la date de dernière modif des CSVs
 
-# Extraire le champ “timestamp” de la dernière ligne des CSVs
-last_iso_chainlink=$(tail -n 1 "$DATA_FILE_CHAINLINK" | cut -d',' -f4)
+# Extraire le champ “round_updated_at_utc” de la dernière ligne du CSV
+last_iso_chainlink=$(tail -n 1 “$DATA_FILE_CHAINLINK” | cut -d',' -f4)
 
-# Convertir ce timestamp ISO en secondes Unix puis +1
-start_ts_chainlink=$(( $(date -d "$last_iso_chainlink" +"%s") + 1 ))
+# Convertir ce timestamp ISO en secondes Unix puis +1 (avec fallback si CSV vide)
+if [[ “$last_iso_chainlink” == “round_updated_at_utc” ]] || [[ -z “$last_iso_chainlink” ]]; then
+  start_ts_chainlink=1546300800
+  echo “[INFO] CSV Chainlink vide, démarrage depuis la date par défaut.”
+else
+  start_ts_chainlink=$(( $(date -d “$last_iso_chainlink” +”%s”) + 1 ))
+fi
 
 echo "[INFO] Timestamp de démarrage pour Chainlink (dernière date +1s) : $start_ts_chainlink"
 

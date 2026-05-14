@@ -44,7 +44,7 @@ OUTPUT_PATH = TEMPLATE_DIR.parent / "README.md"
 data_info = {
     "chainlink": {
         "path": TEMPLATE_DIR.parent / "data" / "chainlink_aave_usd.csv",
-        "col_name": "datetime_utc",
+        "col_name": "round_updated_at_utc",
         "fmt": "%Y-%m-%d %H:%M:%S%z",
         "tz_aware": True,
     },

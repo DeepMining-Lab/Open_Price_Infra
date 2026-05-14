@@ -49,7 +49,7 @@ echo "[INFO] Fichier de données: $DATA_FILE_USDT"
 
 # Extraire les timestamps de départ (+1s) depuis la dernière ligne de chaque CSV
 last_iso_usdc=$(tail -n 1 "$DATA_FILE_USDC" | cut -d',' -f4)
-if [[ "$last_iso_usdc" == "datetime_utc" ]] || [[ -z "$last_iso_usdc" ]]; then
+if [[ "$last_iso_usdc" == "round_updated_at_utc" ]] || [[ -z "$last_iso_usdc" ]]; then
   start_ts_usdc=1546300800
   echo "[INFO] CSV USDC vide, démarrage depuis la date par défaut."
 else
@@ -57,7 +57,7 @@ else
 fi
 
 last_iso_usdt=$(tail -n 1 "$DATA_FILE_USDT" | cut -d',' -f4)
-if [[ "$last_iso_usdt" == "datetime_utc" ]] || [[ -z "$last_iso_usdt" ]]; then
+if [[ "$last_iso_usdt" == "round_updated_at_utc" ]] || [[ -z "$last_iso_usdt" ]]; then
   start_ts_usdt=1546300800
   echo "[INFO] CSV USDT vide, démarrage depuis la date par défaut."
 else
