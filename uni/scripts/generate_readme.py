@@ -54,6 +54,30 @@ data_info = {
         "fmt": "%Y-%m-%d %H:%M:%S%z",
         "tz_aware": True,
     },
+    "usdt": {
+        "path": TEMPLATE_DIR.parent / "data" / "uni_usdt_uniswap_v3_03.csv",
+        "col_name": "timestamp",
+        "fmt": "%Y-%m-%d %H:%M:%S%z",
+        "tz_aware": True,
+    },
+    "weth_v3": {
+        "path": TEMPLATE_DIR.parent / "data" / "uni_weth_uniswap_v3_03.csv",
+        "col_name": "timestamp",
+        "fmt": "%Y-%m-%d %H:%M:%S%z",
+        "tz_aware": True,
+    },
+    "weth_v2": {
+        "path": TEMPLATE_DIR.parent / "data" / "uni_weth_uniswap_v2_03.csv",
+        "col_name": "timestamp",
+        "fmt": "%Y-%m-%d %H:%M:%S%z",
+        "tz_aware": True,
+    },
+    "sushi_v3": {
+        "path": TEMPLATE_DIR.parent / "data" / "uni_eth_sushiswap_v3_03.csv",
+        "col_name": "timestamp",
+        "fmt": "%Y-%m-%d %H:%M:%S%z",
+        "tz_aware": True,
+    },
 }
 
 context = {}

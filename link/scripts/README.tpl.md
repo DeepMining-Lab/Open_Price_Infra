@@ -9,11 +9,11 @@ Open Price LINK is an open-data initiative providing a standardized, continuousl
 |----------------------------------|---------------------------------|-----------------------------------------------|
 | **Chainlink LINK/USD**        | {{ chainlink.extraction }}      | `data/chainlink_link_usd.csv`                |
 | **Uniswap V3 LINK/USDC**     | {{ uniswap.extraction }}        | `data/link_usdc_uniswap_v3_03.csv`           |
-| **Uniswap V3 LINK/USDT**     | N/A                             | `data/link_usdt_uniswap_v3_03.csv`           |
-| **Uniswap V3 LINK/WETH**     | N/A                             | `data/link_weth_uniswap_v3_03.csv`           |
-| **SushiSwap V3 LINK/ETH**    | N/A                             | `data/link_eth_sushiswap_v3_03.csv`          |
-| **Uniswap V2 LINK/WETH**     | N/A                             | `data/link_weth_uniswap_v2_03.csv`           |
-| **SushiSwap V2 LINK/ETH**    | N/A                             | `data/link_eth_sushiswap_v2_03.csv`          |
+| **Uniswap V3 LINK/USDT**     | {{ usdt.extraction }}           | `data/link_usdt_uniswap_v3_03.csv`           |
+| **Uniswap V3 LINK/WETH**     | {{ weth_v3.extraction }}        | `data/link_weth_uniswap_v3_03.csv`           |
+| **SushiSwap V3 LINK/ETH**    | {{ sushi_v3.extraction }}       | `data/link_eth_sushiswap_v3_03.csv`          |
+| **Uniswap V2 LINK/WETH**     | {{ weth_v2.extraction }}        | `data/link_weth_uniswap_v2_03.csv`           |
+| **SushiSwap V2 LINK/ETH**    | {{ sushi_v2.extraction }}       | `data/link_eth_sushiswap_v2_03.csv`          |
 
 ---
 

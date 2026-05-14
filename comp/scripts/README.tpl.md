@@ -9,10 +9,10 @@ Open Price COMP is an open-data initiative providing a standardized, continuousl
 |----------------------------------|---------------------------------|-----------------------------------------------|
 | **Chainlink COMP/USD**        | {{ chainlink.extraction }}      | `data/chainlink_comp_usd.csv`                |
 | **Uniswap V3 COMP/USDC**     | {{ uniswap.extraction }}        | `data/comp_usdc_uniswap_v3_03.csv`           |
-| **Uniswap V3 COMP/USDT**     | N/A                             | `data/comp_usdt_uniswap_v3_03.csv`           |
-| **Uniswap V3 COMP/WETH**     | N/A                             | `data/comp_weth_uniswap_v3_03.csv`           |
-| **Uniswap V2 COMP/WETH**     | N/A                             | `data/comp_weth_uniswap_v2_03.csv`           |
-| **SushiSwap V2 COMP/ETH**    | N/A                             | `data/comp_eth_sushiswap_v2_03.csv`          |
+| **Uniswap V3 COMP/USDT**     | {{ usdt.extraction }}           | `data/comp_usdt_uniswap_v3_03.csv`           |
+| **Uniswap V3 COMP/WETH**     | {{ weth_v3.extraction }}        | `data/comp_weth_uniswap_v3_03.csv`           |
+| **Uniswap V2 COMP/WETH**     | {{ weth_v2.extraction }}        | `data/comp_weth_uniswap_v2_03.csv`           |
+| **SushiSwap V2 COMP/ETH**    | {{ sushi_v2.extraction }}       | `data/comp_eth_sushiswap_v2_03.csv`          |
 
 ---
 

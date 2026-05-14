@@ -166,7 +166,90 @@ else
   echo "[WARNING] $LAST_FILE_CHAINLINK n'a pas été supprimé."
 fi
 
-# 9. MAJ du README
+# 9. Pools supplémentaires
+
+# weth_usdc_uniswap_v2_03
+echo "[INFO] --- Traitement weth_usdc_uniswap_v2_03 ---"
+DATA_FILE_POOL="$PROJECT_DIR/data/weth_usdc_uniswap_v2_03.csv"
+LAST_FILE_POOL="$PROJECT_DIR/data/weth_usdc_uniswap_v2_03_last.csv"
+last_iso_pool=$(tail -n 1 "$DATA_FILE_POOL" | cut -d',' -f1)
+if [[ "$last_iso_pool" == "timestamp" ]] || [[ -z "$last_iso_pool" ]]; then
+  start_ts_pool=1546300800
+  echo "[INFO] CSV weth_usdc_v2 vide, démarrage depuis la date par défaut."
+else
+  start_ts_pool=$(( $(date -d "$last_iso_pool" +"%s") + 1 ))
+fi
+echo "[INFO] Timestamp weth_usdc_v2 : $start_ts_pool"
+cryo logs --address 0xb4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc --rpc $RPC --output-dir "$OUTPUT_DIR" --csv --timestamps ${start_ts_pool}: \
+  || echo "[WARNING] cryo weth_usdc_v2 a rencontré un problème..."
+if ls "$OUTPUT_DIR"/*.csv >/dev/null 2>&1; then
+  python3 "$PROJECT_DIR/scripts/weth_usdc_uniswap_v2_03.py" || echo "[WARNING] Échec weth_usdc_uniswap_v2_03.py"
+else
+  echo "[WARNING] Aucun CSV cryo pour weth_usdc_v2, aucun traitement."
+fi
+rm -rf "$OUTPUT_DIR"/* || true
+if [[ -f "$LAST_FILE_POOL" ]]; then
+  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
+  rm "$LAST_FILE_POOL"
+else
+  echo "[WARNING] $LAST_FILE_POOL non trouvé."
+fi
+
+# weth_usdt_uniswap_v2_03
+echo "[INFO] --- Traitement weth_usdt_uniswap_v2_03 ---"
+DATA_FILE_POOL="$PROJECT_DIR/data/weth_usdt_uniswap_v2_03.csv"
+LAST_FILE_POOL="$PROJECT_DIR/data/weth_usdt_uniswap_v2_03_last.csv"
+last_iso_pool=$(tail -n 1 "$DATA_FILE_POOL" | cut -d',' -f1)
+if [[ "$last_iso_pool" == "timestamp" ]] || [[ -z "$last_iso_pool" ]]; then
+  start_ts_pool=1546300800
+  echo "[INFO] CSV weth_usdt_v2 vide, démarrage depuis la date par défaut."
+else
+  start_ts_pool=$(( $(date -d "$last_iso_pool" +"%s") + 1 ))
+fi
+echo "[INFO] Timestamp weth_usdt_v2 : $start_ts_pool"
+cryo logs --address 0x0d4a11d5EEaaC28EC3F61d100dAF4d40471f1852 --rpc $RPC --output-dir "$OUTPUT_DIR" --csv --timestamps ${start_ts_pool}: \
+  || echo "[WARNING] cryo weth_usdt_v2 a rencontré un problème..."
+if ls "$OUTPUT_DIR"/*.csv >/dev/null 2>&1; then
+  python3 "$PROJECT_DIR/scripts/weth_usdt_uniswap_v2_03.py" || echo "[WARNING] Échec weth_usdt_uniswap_v2_03.py"
+else
+  echo "[WARNING] Aucun CSV cryo pour weth_usdt_v2, aucun traitement."
+fi
+rm -rf "$OUTPUT_DIR"/* || true
+if [[ -f "$LAST_FILE_POOL" ]]; then
+  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
+  rm "$LAST_FILE_POOL"
+else
+  echo "[WARNING] $LAST_FILE_POOL non trouvé."
+fi
+
+# crvusd_weth_curve
+echo "[INFO] --- Traitement crvusd_weth_curve ---"
+DATA_FILE_POOL="$PROJECT_DIR/data/crvusd_weth_curve.csv"
+LAST_FILE_POOL="$PROJECT_DIR/data/crvusd_weth_curve_last.csv"
+last_iso_pool=$(tail -n 1 "$DATA_FILE_POOL" | cut -d',' -f1)
+if [[ "$last_iso_pool" == "timestamp" ]] || [[ -z "$last_iso_pool" ]]; then
+  start_ts_pool=1546300800
+  echo "[INFO] CSV crvusd_weth_curve vide, démarrage depuis la date par défaut."
+else
+  start_ts_pool=$(( $(date -d "$last_iso_pool" +"%s") + 1 ))
+fi
+echo "[INFO] Timestamp crvusd_weth_curve : $start_ts_pool"
+cryo logs --address 0x6e5492f8Ea2370844eE098a56dD88e1717E4A9C2 --rpc $RPC --output-dir "$OUTPUT_DIR" --csv --timestamps ${start_ts_pool}: \
+  || echo "[WARNING] cryo crvusd_weth_curve a rencontré un problème..."
+if ls "$OUTPUT_DIR"/*.csv >/dev/null 2>&1; then
+  python3 "$PROJECT_DIR/scripts/crvusd_weth_curve.py" || echo "[WARNING] Échec crvusd_weth_curve.py"
+else
+  echo "[WARNING] Aucun CSV cryo pour crvusd_weth_curve, aucun traitement."
+fi
+rm -rf "$OUTPUT_DIR"/* || true
+if [[ -f "$LAST_FILE_POOL" ]]; then
+  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
+  rm "$LAST_FILE_POOL"
+else
+  echo "[WARNING] $LAST_FILE_POOL non trouvé."
+fi
+
+# 10. MAJ du README
 echo "[INFO] Lancement de generate_readme.py..."
 if ! python3 "$PROJECT_DIR/scripts/generate_readme.py"; then 
   echo "[WARNING] Impossible de mettre à jour le README !" >&2
@@ -174,7 +257,7 @@ fi
 
 echo "[INFO] Generate_readme terminé"
 
-# 10. SCP dans Filebrowser des data
+# 11. SCP dans Filebrowser des data
 
 MAX=5
 SCP_OK=false
@@ -196,7 +279,7 @@ else
 fi
 
 
-# 11. Commit & Push du README mis-à-jour sur Github
+# 12. Commit & Push du README mis-à-jour sur Github
 
 git add README.md
 git commit -m "Update data" || echo "[WARNING] Rien à committer ou échec du commit."

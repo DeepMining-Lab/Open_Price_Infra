@@ -9,10 +9,10 @@ Open Price UNI is an open-data initiative providing a standardized, continuously
 |----------------------------------|---------------------------------|-----------------------------------------------|
 | **Chainlink UNI/USD**         | {{ chainlink.extraction }}      | `data/chainlink_uni_usd.csv`                 |
 | **Uniswap V3 UNI/USDC**      | {{ uniswap.extraction }}        | `data/uni_usdc_uniswap_v3_03.csv`            |
-| **Uniswap V3 UNI/USDT**      | N/A                             | `data/uni_usdt_uniswap_v3_03.csv`            |
-| **Uniswap V3 UNI/WETH**      | N/A                             | `data/uni_weth_uniswap_v3_03.csv`            |
-| **SushiSwap V3 UNI/ETH**     | N/A                             | `data/uni_eth_sushiswap_v3_03.csv`           |
-| **Uniswap V2 UNI/WETH**      | N/A                             | `data/uni_weth_uniswap_v2_03.csv`            |
+| **Uniswap V3 UNI/USDT**      | {{ usdt.extraction }}           | `data/uni_usdt_uniswap_v3_03.csv`            |
+| **Uniswap V3 UNI/WETH**      | {{ weth_v3.extraction }}        | `data/uni_weth_uniswap_v3_03.csv`            |
+| **SushiSwap V3 UNI/ETH**     | {{ sushi_v3.extraction }}       | `data/uni_eth_sushiswap_v3_03.csv`           |
+| **Uniswap V2 UNI/WETH**      | {{ weth_v2.extraction }}        | `data/uni_weth_uniswap_v2_03.csv`            |
 
 ---
 

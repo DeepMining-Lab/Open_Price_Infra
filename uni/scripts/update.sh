@@ -119,12 +119,122 @@ fi
 [[ -f "$LAST_FILE_UNISWAP" ]]  && rm "$LAST_FILE_UNISWAP"  || echo "[WARNING] $LAST_FILE_UNISWAP absent."
 [[ -f "$LAST_FILE_CHAINLINK" ]] && rm "$LAST_FILE_CHAINLINK" || echo "[WARNING] $LAST_FILE_CHAINLINK absent."
 
-# 9. MAJ README
+# 9. Pools supplémentaires
+
+# uni_usdt_uniswap_v3_03
+echo "[INFO] --- Traitement uni_usdt_uniswap_v3_03 ---"
+DATA_FILE_POOL="$PROJECT_DIR/data/uni_usdt_uniswap_v3_03.csv"
+LAST_FILE_POOL="$PROJECT_DIR/data/uni_usdt_uniswap_v3_03_last.csv"
+last_iso_pool=$(tail -n 1 "$DATA_FILE_POOL" | cut -d',' -f1)
+if [[ "$last_iso_pool" == "timestamp" ]] || [[ -z "$last_iso_pool" ]]; then
+  start_ts_pool=1546300800
+  echo "[INFO] CSV uni_usdt vide, démarrage depuis la date par défaut."
+else
+  start_ts_pool=$(( $(date -d "$last_iso_pool" +"%s") + 1 ))
+fi
+echo "[INFO] Timestamp uni_usdt : $start_ts_pool"
+cryo logs --address 0x3470447f3cECFfaC709D3E783A307790B0208d60 --rpc $RPC --output-dir "$OUTPUT_DIR" --csv --timestamps ${start_ts_pool}: \
+  || echo "[WARNING] cryo uni_usdt a rencontré un problème..."
+if ls "$OUTPUT_DIR"/*.csv >/dev/null 2>&1; then
+  python3 "$PROJECT_DIR/scripts/uni_usdt_uniswap_v3_03.py" || echo "[WARNING] Échec uni_usdt_uniswap_v3_03.py"
+else
+  echo "[WARNING] Aucun CSV cryo pour uni_usdt, aucun traitement."
+fi
+rm -rf "$OUTPUT_DIR"/* || true
+if [[ -f "$LAST_FILE_POOL" ]]; then
+  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
+  rm "$LAST_FILE_POOL"
+else
+  echo "[WARNING] $LAST_FILE_POOL non trouvé."
+fi
+
+# uni_weth_uniswap_v3_03
+echo "[INFO] --- Traitement uni_weth_uniswap_v3_03 ---"
+DATA_FILE_POOL="$PROJECT_DIR/data/uni_weth_uniswap_v3_03.csv"
+LAST_FILE_POOL="$PROJECT_DIR/data/uni_weth_uniswap_v3_03_last.csv"
+last_iso_pool=$(tail -n 1 "$DATA_FILE_POOL" | cut -d',' -f1)
+if [[ "$last_iso_pool" == "timestamp" ]] || [[ -z "$last_iso_pool" ]]; then
+  start_ts_pool=1546300800
+  echo "[INFO] CSV uni_weth_v3 vide, démarrage depuis la date par défaut."
+else
+  start_ts_pool=$(( $(date -d "$last_iso_pool" +"%s") + 1 ))
+fi
+echo "[INFO] Timestamp uni_weth_v3 : $start_ts_pool"
+cryo logs --address 0x1d42064FC4BeB5f8Aaf85F4617AE8b3B5B8BD801 --rpc $RPC --output-dir "$OUTPUT_DIR" --csv --timestamps ${start_ts_pool}: \
+  || echo "[WARNING] cryo uni_weth_v3 a rencontré un problème..."
+if ls "$OUTPUT_DIR"/*.csv >/dev/null 2>&1; then
+  python3 "$PROJECT_DIR/scripts/uni_weth_uniswap_v3_03.py" || echo "[WARNING] Échec uni_weth_uniswap_v3_03.py"
+else
+  echo "[WARNING] Aucun CSV cryo pour uni_weth_v3, aucun traitement."
+fi
+rm -rf "$OUTPUT_DIR"/* || true
+if [[ -f "$LAST_FILE_POOL" ]]; then
+  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
+  rm "$LAST_FILE_POOL"
+else
+  echo "[WARNING] $LAST_FILE_POOL non trouvé."
+fi
+
+# uni_weth_uniswap_v2_03
+echo "[INFO] --- Traitement uni_weth_uniswap_v2_03 ---"
+DATA_FILE_POOL="$PROJECT_DIR/data/uni_weth_uniswap_v2_03.csv"
+LAST_FILE_POOL="$PROJECT_DIR/data/uni_weth_uniswap_v2_03_last.csv"
+last_iso_pool=$(tail -n 1 "$DATA_FILE_POOL" | cut -d',' -f1)
+if [[ "$last_iso_pool" == "timestamp" ]] || [[ -z "$last_iso_pool" ]]; then
+  start_ts_pool=1546300800
+  echo "[INFO] CSV uni_weth_v2 vide, démarrage depuis la date par défaut."
+else
+  start_ts_pool=$(( $(date -d "$last_iso_pool" +"%s") + 1 ))
+fi
+echo "[INFO] Timestamp uni_weth_v2 : $start_ts_pool"
+cryo logs --address 0xd3d2E2692501A5c9Ca623199D38826e513033A17 --rpc $RPC --output-dir "$OUTPUT_DIR" --csv --timestamps ${start_ts_pool}: \
+  || echo "[WARNING] cryo uni_weth_v2 a rencontré un problème..."
+if ls "$OUTPUT_DIR"/*.csv >/dev/null 2>&1; then
+  python3 "$PROJECT_DIR/scripts/uni_weth_uniswap_v2_03.py" || echo "[WARNING] Échec uni_weth_uniswap_v2_03.py"
+else
+  echo "[WARNING] Aucun CSV cryo pour uni_weth_v2, aucun traitement."
+fi
+rm -rf "$OUTPUT_DIR"/* || true
+if [[ -f "$LAST_FILE_POOL" ]]; then
+  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
+  rm "$LAST_FILE_POOL"
+else
+  echo "[WARNING] $LAST_FILE_POOL non trouvé."
+fi
+
+# uni_eth_sushiswap_v3_03
+echo "[INFO] --- Traitement uni_eth_sushiswap_v3_03 ---"
+DATA_FILE_POOL="$PROJECT_DIR/data/uni_eth_sushiswap_v3_03.csv"
+LAST_FILE_POOL="$PROJECT_DIR/data/uni_eth_sushiswap_v3_03_last.csv"
+last_iso_pool=$(tail -n 1 "$DATA_FILE_POOL" | cut -d',' -f1)
+if [[ "$last_iso_pool" == "timestamp" ]] || [[ -z "$last_iso_pool" ]]; then
+  start_ts_pool=1546300800
+  echo "[INFO] CSV uni_eth_sushi_v3 vide, démarrage depuis la date par défaut."
+else
+  start_ts_pool=$(( $(date -d "$last_iso_pool" +"%s") + 1 ))
+fi
+echo "[INFO] Timestamp uni_eth_sushi_v3 : $start_ts_pool"
+cryo logs --address 0xEd35BD3D709CB50f34113A4962607B2A0F93cD92 --rpc $RPC --output-dir "$OUTPUT_DIR" --csv --timestamps ${start_ts_pool}: \
+  || echo "[WARNING] cryo uni_eth_sushi_v3 a rencontré un problème..."
+if ls "$OUTPUT_DIR"/*.csv >/dev/null 2>&1; then
+  python3 "$PROJECT_DIR/scripts/uni_eth_sushiswap_v3_03.py" || echo "[WARNING] Échec uni_eth_sushiswap_v3_03.py"
+else
+  echo "[WARNING] Aucun CSV cryo pour uni_eth_sushi_v3, aucun traitement."
+fi
+rm -rf "$OUTPUT_DIR"/* || true
+if [[ -f "$LAST_FILE_POOL" ]]; then
+  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
+  rm "$LAST_FILE_POOL"
+else
+  echo "[WARNING] $LAST_FILE_POOL non trouvé."
+fi
+
+# 10. MAJ README
 echo "[INFO] Lancement de generate_readme.py..."
 python3 "$PROJECT_DIR/scripts/generate_readme.py" || echo "[WARNING] Impossible de mettre à jour le README." >&2
 echo "[INFO] Generate_readme terminé"
 
-# 10. SCP
+# 11. SCP
 MAX=5
 SCP_OK=false
 for i in $(seq 1 $MAX); do
@@ -144,7 +254,7 @@ else
   exit 1
 fi
 
-# 11. Commit & Push
+# 12. Commit & Push
 git add README.md
 git commit -m "Update data" || echo "[WARNING] Rien à committer ou échec du commit."
 git pull --rebase origin main || echo "[WARNING] git pull --rebase avant push a échoué."

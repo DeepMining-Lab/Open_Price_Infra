@@ -71,6 +71,24 @@ data_info = {
         "fmt": "%Y-%m-%d %H:%M:%S%z",
         "tz_aware": True,
     },
+    "weth_usdc_v2": {
+        "path": TEMPLATE_DIR.parent / "data" / "weth_usdc_uniswap_v2_03.csv",
+        "col_name": "timestamp",
+        "fmt": "%Y-%m-%d %H:%M:%S%z",
+        "tz_aware": True,
+    },
+    "weth_usdt_v2": {
+        "path": TEMPLATE_DIR.parent / "data" / "weth_usdt_uniswap_v2_03.csv",
+        "col_name": "timestamp",
+        "fmt": "%Y-%m-%d %H:%M:%S%z",
+        "tz_aware": True,
+    },
+    "crvusd": {
+        "path": TEMPLATE_DIR.parent / "data" / "crvusd_weth_curve.csv",
+        "col_name": "timestamp",
+        "fmt": "%Y-%m-%d %H:%M:%S%z",
+        "tz_aware": True,
+    },
 }
 
 # Construction du contexte pour le template

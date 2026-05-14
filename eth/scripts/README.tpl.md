@@ -9,9 +9,9 @@ Open Price ETH is an open-data initiative providing a standardized, continuously
 |----------------------------------|---------------------------------|-----------------------------------------------|
 | **Chainlink ETH/USD**         | {{ chainlink.extraction }}      | `data/chainlink_eth_usd.csv`                  |
 | **Uniswap V3 ETH/USDC**      | {{ uniswap.extraction }}        | `data/eth_usdc_uniswap_v3_005.csv`            |
-| **Uniswap V2 WETH/USDC**     | N/A                             | `data/weth_usdc_uniswap_v2_03.csv`            |
-| **Uniswap V2 WETH/USDT**     | N/A                             | `data/weth_usdt_uniswap_v2_03.csv`            |
-| **Curve crvUSD/WETH**        | N/A                             | `data/crvusd_weth_curve.csv`                  |
+| **Uniswap V2 WETH/USDC**     | {{ weth_usdc_v2.extraction }}   | `data/weth_usdc_uniswap_v2_03.csv`            |
+| **Uniswap V2 WETH/USDT**     | {{ weth_usdt_v2.extraction }}   | `data/weth_usdt_uniswap_v2_03.csv`            |
+| **Curve crvUSD/WETH**        | {{ crvusd.extraction }}         | `data/crvusd_weth_curve.csv`                  |
 
 ---
 
