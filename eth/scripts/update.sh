@@ -180,7 +180,7 @@ MAX=5
 SCP_OK=false
 for i in $(seq 1 $MAX); do
   echo "[INFO] Tentative #$i..."
-  if scp data/{chainlink_eth_usd.csv,eth_usdc_uniswap_v3_005.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices; then
+  if scp data/{chainlink_eth_usd.csv,eth_usdc_uniswap_v3_005.csv,weth_usdc_uniswap_v2_03.csv,weth_usdt_uniswap_v2_03.csv,crvusd_weth_curve.csv} debian@extract.lan.text-analytics.ch:/data/ethereum/prices; then
     SCP_OK=true
     break
   fi
