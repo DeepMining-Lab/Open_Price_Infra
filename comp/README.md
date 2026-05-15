@@ -7,12 +7,12 @@ Open Price COMP is an open-data initiative providing a standardized, continuousl
 
 | Dataset                          | End Date Available              | CSV File                                      |
 |----------------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink COMP/USD**        | 2026-05-14 10:21:47 UTC      | `data/chainlink_comp_usd.csv`                |
+| **Chainlink COMP/USD**        | 2026-05-15 14:34:23 UTC      | `data/chainlink_comp_usd.csv`                |
 | **Uniswap V3 COMP/USDC**     | 2026-02-12 21:49:11 UTC        | `data/comp_usdc_uniswap_v3_03.csv`           |
 | **Uniswap V3 COMP/USDT**     | 2021-10-06 09:21:30 UTC           | `data/comp_usdt_uniswap_v3_03.csv`           |
-| **Uniswap V3 COMP/WETH**     | 2026-05-14 11:36:23 UTC        | `data/comp_weth_uniswap_v3_03.csv`           |
-| **Uniswap V2 COMP/WETH**     | 2026-05-14 12:02:59 UTC        | `data/comp_weth_uniswap_v2_03.csv`           |
-| **SushiSwap V2 COMP/ETH**    | 2026-05-14 12:08:35 UTC       | `data/comp_eth_sushiswap_v2_03.csv`          |
+| **Uniswap V3 COMP/WETH**     | 2026-05-15 15:40:47 UTC        | `data/comp_weth_uniswap_v3_03.csv`           |
+| **Uniswap V2 COMP/WETH**     | 2026-05-15 15:35:59 UTC        | `data/comp_weth_uniswap_v2_03.csv`           |
+| **SushiSwap V2 COMP/ETH**    | 2026-05-15 15:35:59 UTC       | `data/comp_eth_sushiswap_v2_03.csv`          |
 
 ---
 
@@ -71,6 +71,8 @@ Open Price COMP is an open-data initiative providing a standardized, continuousl
 
 ## 🗂 CSV Structure: `comp_usdc_uniswap_v3_03.csv`
 
+**Core price data**
+
 | Column                | Type    | Description                                                                                  |
 |-----------------------|---------|----------------------------------------------------------------------------------------------|
 | `timestamp`           | string  | UTC timestamp of the block, e.g. `2024-04-19 23:59:59+00:00`                                |
@@ -90,15 +92,71 @@ Open Price COMP is an open-data initiative providing a standardized, continuousl
 | `pool_tvl_at_block`   | float   | Total Value Locked in USD at the swap block (USDC balance + COMP balance × price)           |
 | `slip_1k`             | float   | Simulated cost of a 1 000 USDC→COMP swap: price impact + fee tier (via QuoterV2). `None` for pre-2022 blocks (QuoterV2 not yet deployed). |
 
+**Extraction metadata**
+
+| Column | Type | Description | Method |
+|--------|------|-------------|--------|
+| `extraction_run_id` | string | UUID identifying this extraction run | script-local (`uuid4`) |
+| `schema_version` | string | CSV schema version (e.g. `dex_uniswap_v3_v1`) | config |
+| `extraction_timestamp_utc` | string | UTC timestamp of extraction start | script-local |
+| `client_name` | string | Ethereum client name of the RPC node | `web3_clientVersion` (before first `/`) |
+| `client_version` | string | Ethereum client version | `web3_clientVersion` (after first `/`) |
+| `node_chain_id` | int | Chain ID reported by the node | `eth_chainId` |
+| `node_head_block_at_extraction` | int | Latest block number known at extraction time | `eth_blockNumber` |
+| `node_sync_completion_block` | int | Current sync block (= head if node is fully synced) | `eth_syncing` or `eth_blockNumber` |
+| `rpc_method_used` | string | RPC methods used | config |
+| `extraction_script_hash` | string | SHA-256 of the Python script that produced this CSV | `hashlib.sha256(open(__file__,'rb').read())` |
+| `abi_hash` | string | SHA-256 of the Swap event ABI string | `hashlib.sha256(SWAP_EVENT_ABI.encode())` |
+| `network_name` | string | Blockchain network name | config |
+
+**Block and transaction metadata**
+
+| Column | Type | Description | Method |
+|--------|------|-------------|--------|
+| `block_timestamp_utc` | string | UTC timestamp of the block | `eth_getBlockByNumber` → `timestamp` |
+| `block_hash` | string | Block hash | `eth_getBlockByNumber` → `hash` |
+| `transaction_index` | int | Transaction index within the block | from cryo CSV |
+| `event_signature` | string | Keccak-256 of the Swap event signature (= `topic0`) | config |
+
+**DEX and token metadata**
+
+| Column | Type | Description | Method |
+|--------|------|-------------|--------|
+| `dex_protocol` | string | DEX protocol (`uniswap` or `sushiswap`) | config |
+| `dex_version` | string | Protocol version (`v3` or `v2`) | config |
+| `token0_address` | string | token0 contract address | config |
+| `token1_address` | string | token1 contract address | config |
+| `token0_symbol` | string | token0 symbol | `eth_call:symbol()` ERC-20 |
+| `token1_symbol` | string | token1 symbol | `eth_call:symbol()` ERC-20 |
+| `token0_decimals` | int | token0 decimals | config |
+| `token1_decimals` | int | token1 decimals | config |
+| `amount0_raw` | int | Net token0 flow in raw units (positive = into pool) | ABI decoding |
+| `amount1_raw` | int | Net token1 flow in raw units | ABI decoding |
+| `amount0_normalized` | float | `amount0_raw / 10^token0_decimals` | computed |
+| `amount1_normalized` | float | `amount1_raw / 10^token1_decimals` | computed |
+| `swap_sender` | string | Swap sender address | `topic1` of log |
+| `swap_recipient` | string | Swap recipient address | `topic2` of log |
+| `swap_direction` | string | `token0_to_token1` or `token1_to_token0` | computed from `amount0_raw` |
+| `base_token_address` | string | Base token address (COMP) | config |
+| `quote_token_address` | string | Quote token address | config |
+| `base_token_symbol` | string | Base token symbol | config |
+| `quote_token_symbol` | string | Quote token symbol | config |
+| `price_source_field` | string | Price computation method | config |
+| `pool_tvl_threshold_used` | int | TVL threshold for `low_liquidity` flag | config |
+| `slip_10k` | float | Simulated slippage for a swap 10× the `slip_1k` amount (10 000 USDC→COMP via QuoterV2) | computed |
+| `quality_flags` | string | Quality flags (`low_liquidity`, `zero_amount`, `extreme_slippage`, or `ok`) | computed |
+
 ## 🗂 CSV Structure: `comp_usdt_uniswap_v3_03.csv`
 
 Same structure as `comp_usdc_uniswap_v3_03.csv` with USDT replacing USDC. Note: COMP=token0, USDT=token1, so price formula is `sqrtP²×1e12` (unlike the USDC pool where USDC=token0).
 
-Columns: `price_usdt_per_comp`, `usdt_amount`, `comp_amount`, `volume_usdt` — rest identical.
+Core columns: `price_usdt_per_comp`, `usdt_amount`, `comp_amount`, `volume_usdt` — all metadata columns identical to the USDC dataset. `slip_1k` and `slip_10k` simulate buying COMP with 1 000 and 10 000 USDT respectively.
 
 ## 🗂 CSV Structure: `comp_weth_uniswap_v3_03.csv`
 
-Uniswap V3 COMP/WETH pool. TVL and volume expressed in WETH. `slip_1k` simulates buying COMP with 1 WETH.
+Uniswap V3 COMP/WETH pool. TVL and volume expressed in WETH. `slip_1k` simulates buying COMP with 1 WETH; `slip_10k` with 10 WETH.
+
+**Core price data**
 
 | Column                | Type    | Description                                                                                  |
 |-----------------------|---------|----------------------------------------------------------------------------------------------|
@@ -119,9 +177,13 @@ Uniswap V3 COMP/WETH pool. TVL and volume expressed in WETH. `slip_1k` simulates
 | `pool_tvl_at_block`   | float   | Total Value Locked in WETH (WETH balance + COMP balance × price)                             |
 | `slip_1k`             | float   | Simulated cost of a 1 WETH→COMP swap (via QuoterV2)                                         |
 
+All extraction metadata, block/transaction metadata, and DEX/token metadata columns are identical to those described for `comp_usdc_uniswap_v3_03.csv` above. Additionally: `slip_10k` (10 WETH→COMP), `quality_flags`.
+
 ## 🗂 CSV Structure: `comp_weth_uniswap_v2_03.csv` and `comp_eth_sushiswap_v2_03.csv`
 
-Uniswap V2 and SushiSwap V2 COMP/WETH pools. Price from swap amounts; reserves from `getReserves()`. `slip_1k` uses the V2 analytical formula.
+Uniswap V2 and SushiSwap V2 COMP/WETH pools. Price from swap amounts; reserves from `getReserves()`. `slip_1k` and `slip_10k` use the V2 analytical AMM formula.
+
+**Core price data**
 
 | Column                | Type    | Description                                                                                  |
 |-----------------------|---------|----------------------------------------------------------------------------------------------|
@@ -140,6 +202,8 @@ Uniswap V2 and SushiSwap V2 COMP/WETH pools. Price from swap amounts; reserves f
 | `reserve1`            | uint112 | Raw token1 (WETH) reserve at the swap block                                                  |
 | `pool_tvl_at_block`   | float   | Total Value Locked in WETH (WETH reserve + COMP reserve × price)                             |
 | `slip_1k`             | float   | Simulated cost of a 1 WETH→COMP swap using the V2 analytical formula                        |
+
+All extraction metadata, block/transaction metadata, and DEX/token metadata columns are identical to those described for `comp_usdc_uniswap_v3_03.csv` above. Additionally: `slip_10k` (10 WETH/ETH→COMP, V2 AMM formula), `quality_flags`.
 
 ---
 
