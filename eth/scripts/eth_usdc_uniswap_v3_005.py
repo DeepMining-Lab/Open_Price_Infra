@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0
 # © 2025 HES-SO / HEG Geneva / Deep Mining Lab / FairOnChain / Open Price ETH
 
+import gc
 import pandas as pd
 from web3 import Web3
 from datetime import datetime, timezone
@@ -80,7 +81,7 @@ with open(__file__, 'rb') as _f:
 here = os.path.dirname(__file__)
 data_dir = os.path.normpath(os.path.join(here, os.pardir, 'data', 'output'))
 pattern = os.path.join(data_dir, '*.csv')
-csv_files = glob.glob(pattern)
+csv_files = sorted(glob.glob(pattern))
 
 
 def get_token_symbol(web3, token_address):
@@ -386,25 +387,29 @@ def main(output_filename='eth_usdc_uniswap_v3_005_last.csv'):
         sys.exit(1)
     print(f"Connexion établie: {web3.is_connected()}")
 
-    all_prices = pd.DataFrame()
+    here2 = os.path.dirname(__file__)
+    data_dir2 = os.path.normpath(os.path.join(here2, os.pardir, 'data'))
+    output_path = os.path.join(data_dir2, output_filename)
+
+    total_rows = 0
+    first_write = True
     for csv_file in csv_files:
         prices = process_uniswap_logs(csv_file, web3)
         if not prices.empty:
-            all_prices = pd.concat([all_prices, prices])
+            prices = prices.sort_values("timestamp").reset_index(drop=True)
+            prices.to_csv(output_path, mode='a', header=first_write, index=False)
+            total_rows += len(prices)
+            first_write = False
+        del prices
+        gc.collect()
 
-    if all_prices.empty:
+    if total_rows == 0:
         print("Aucune donnée traitée.")
         return None
 
-    here2      = os.path.dirname(__file__)
-    data_dir2  = os.path.normpath(os.path.join(here2, os.pardir, 'data'))
-    output_path = os.path.join(data_dir2, output_filename)
-
-    all_prices = all_prices.sort_values("timestamp").reset_index(drop=True)
-    all_prices.to_csv(output_path, index=False)
     print(f"\nFichier CSV créé: {output_path}")
-    print(f"Nombre total d'événements traités: {len(all_prices)}")
-    return all_prices
+    print(f"Nombre total d'événements traités: {total_rows}")
+    return True
 
 
 if __name__ == "__main__":
