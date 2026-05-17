@@ -177,6 +177,25 @@ def get_slip_1k(web3, block_number, price_weth_per_uni):
         return None
 
 
+def get_slip_10k(web3, block_number, price_weth_per_uni):
+    try:
+        quoter    = web3.eth.contract(address=Web3.to_checksum_address(QUOTER_V2_ADDRESS), abi=QUOTER_V2_ABI)
+        amount_in = 10 * 10**TOKEN1_DECIMALS  # 10 WETH
+        result    = quoter.functions.quoteExactInputSingle({
+            'tokenIn':           Web3.to_checksum_address(TOKEN1_ADDRESS),
+            'tokenOut':          Web3.to_checksum_address(TOKEN0_ADDRESS),
+            'amountIn':          amount_in,
+            'fee':               POOL_FEE_TIER,
+            'sqrtPriceLimitX96': 0,
+        }).call(block_identifier=block_number)
+        uni_received = mp.mpf(result[0]) / 10**TOKEN0_DECIMALS
+        expected_uni = mp.mpf(10) / price_weth_per_uni
+        return float(1 - uni_received / expected_uni)
+    except Exception as e:
+        print(f"Erreur slip_10k au bloc {block_number}: {e}")
+        return None
+
+
 def process_uniswap_logs(csv_path, web3):
     try:
         print(f"Lecture du fichier: {csv_path}")
@@ -300,16 +319,19 @@ def process_uniswap_logs(csv_path, web3):
             return pd.DataFrame()
 
         unique_blocks = list(block_last_price.keys())
-        print(f"\nCal TVL et slip_1k pour {len(unique_blocks)} blocs uniques...")
-        tvl_cache  = {}
-        slip_cache = {}
+        print(f"\nCal TVL, slip_1k et slip_10k pour {len(unique_blocks)} blocs uniques...")
+        tvl_cache     = {}
+        slip_cache    = {}
+        slip10k_cache = {}
         for bn in unique_blocks:
             price_ref = block_last_price[bn]
-            tvl_cache[bn]  = get_tvl_at_block(web3, bn, price_ref)
-            slip_cache[bn] = get_slip_1k(web3, bn, price_ref)
+            tvl_cache[bn]     = get_tvl_at_block(web3, bn, price_ref)
+            slip_cache[bn]    = get_slip_1k(web3, bn, price_ref)
+            slip10k_cache[bn] = get_slip_10k(web3, bn, price_ref)
         for r in rows:
             r['pool_tvl_at_block'] = tvl_cache.get(r['block_number'])
             r['slip_1k']           = slip_cache.get(r['block_number'])
+            r['slip_10k']          = slip10k_cache.get(r['block_number'])
             r['quality_flags']     = compute_quality_flags(
                 r['pool_tvl_at_block'], r['amount0_raw'], r['amount1_raw'],
                 r['slip_1k'], POOL_TVL_THRESHOLD_USED
