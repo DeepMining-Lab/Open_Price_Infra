@@ -23,6 +23,24 @@ find "$LOG_DIR" -name "*.log" -mtime +30 -delete && echo "[INFO] Anciens logs (>
 echo "=== Démarrage du script update.sh ($(date)) ===" | tee -a "$LOG_FILE"
 exec > >(awk '{ print strftime("%Y-%m-%d %H:%M:%S"), "-", $0; fflush(); }' | tee -a "$LOG_FILE") 2>&1
 
+concat_with_header_sync() {
+  local last="$1" data="$2"
+  if [[ ! -f "$last" ]]; then
+    echo "[WARNING] $last non trouvé, aucune concaténation effectuée."
+    return
+  fi
+  local last_hdr data_hdr
+  last_hdr=$(head -1 "$last")
+  data_hdr=$(head -1 "$data")
+  if [[ "$last_hdr" != "$data_hdr" ]]; then
+    echo "[WARNING] Schema mismatch détecté pour $(basename "$data") — mise à jour du header"
+    sed -i "1s|.*|${last_hdr}|" "$data"
+  fi
+  echo "[INFO] Concaténation de $last dans $data"
+  tail -n +2 "$last" >> "$data"
+  rm "$last"
+}
+
 DATA_FILE_USDC="$PROJECT_DIR/data/chainlink_usdc_usd.csv"
 DATA_FILE_USDT="$PROJECT_DIR/data/chainlink_usdt_usd.csv"
 LAST_FILE_USDC="$PROJECT_DIR/data/chainlink_usdc_usd_last.csv"
@@ -86,21 +104,8 @@ fi
 echo "[INFO] Traitement Chainlink USDT terminé"
 
 # Concaténer les fichiers _last dans les CSVs principaux
-if [[ -f "$LAST_FILE_USDC" ]]; then
-  echo "[INFO] Concaténation de $LAST_FILE_USDC dans $DATA_FILE_USDC"
-  tail -n +2 "$LAST_FILE_USDC" >> "$DATA_FILE_USDC"
-  rm "$LAST_FILE_USDC"
-else
-  echo "[WARNING] $LAST_FILE_USDC non trouvé, aucune concaténation effectuée."
-fi
-
-if [[ -f "$LAST_FILE_USDT" ]]; then
-  echo "[INFO] Concaténation de $LAST_FILE_USDT dans $DATA_FILE_USDT"
-  tail -n +2 "$LAST_FILE_USDT" >> "$DATA_FILE_USDT"
-  rm "$LAST_FILE_USDT"
-else
-  echo "[WARNING] $LAST_FILE_USDT non trouvé, aucune concaténation effectuée."
-fi
+concat_with_header_sync "$LAST_FILE_USDC" "$DATA_FILE_USDC"
+concat_with_header_sync "$LAST_FILE_USDT" "$DATA_FILE_USDT"
 
 # MAJ du README
 echo "[INFO] Lancement de generate_readme.py..."

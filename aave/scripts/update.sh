@@ -19,6 +19,24 @@ find "$LOG_DIR" -name "*.log" -mtime +30 -delete && echo "[INFO] Anciens logs (>
 echo "=== Démarrage du script update.sh ($(date)) ===" | tee -a "$LOG_FILE"
 exec > >(awk '{ print strftime("%Y-%m-%d %H:%M:%S"), "-", $0; fflush(); }' | tee -a "$LOG_FILE") 2>&1
 
+concat_with_header_sync() {
+  local last="$1" data="$2"
+  if [[ ! -f "$last" ]]; then
+    echo "[WARNING] $last non trouvé, aucune concaténation effectuée."
+    return
+  fi
+  local last_hdr data_hdr
+  last_hdr=$(head -1 "$last")
+  data_hdr=$(head -1 "$data")
+  if [[ "$last_hdr" != "$data_hdr" ]]; then
+    echo "[WARNING] Schema mismatch détecté pour $(basename "$data") — mise à jour du header"
+    sed -i "1s|.*|${last_hdr}|" "$data"
+  fi
+  echo "[INFO] Concaténation de $last dans $data"
+  tail -n +2 "$last" >> "$data"
+  rm "$last"
+}
+
 DATA_FILE_UNISWAP="$PROJECT_DIR/data/aave_usdc_uniswap_v3_03.csv"
 DATA_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_aave_usd.csv"
 OUTPUT_DIR="$PROJECT_DIR/data/output"
@@ -101,23 +119,8 @@ echo "[INFO] Suppression du contenu de $OUTPUT_DIR"
 rm -rf "$OUTPUT_DIR"/* || echo "[WARNING] Impossible de supprimer $OUTPUT_DIR." >&2
 
 # 7. Concaténation
-if [[ -f "$LAST_FILE_UNISWAP" ]]; then
-  echo "[INFO] Concaténation $LAST_FILE_UNISWAP dans $DATA_FILE_UNISWAP"
-  tail -n +2 "$LAST_FILE_UNISWAP" >> "$DATA_FILE_UNISWAP"
-else
-  echo "[WARNING] $LAST_FILE_UNISWAP non trouvé."
-fi
-
-if [[ -f "$LAST_FILE_CHAINLINK" ]]; then
-  echo "[INFO] Concaténation $LAST_FILE_CHAINLINK dans $DATA_FILE_CHAINLINK"
-  tail -n +2 "$LAST_FILE_CHAINLINK" >> "$DATA_FILE_CHAINLINK"
-else
-  echo "[WARNING] $LAST_FILE_CHAINLINK non trouvé."
-fi
-
-# 8. Suppression des fichiers temporaires
-[[ -f "$LAST_FILE_UNISWAP" ]]  && rm "$LAST_FILE_UNISWAP"  || echo "[WARNING] $LAST_FILE_UNISWAP absent."
-[[ -f "$LAST_FILE_CHAINLINK" ]] && rm "$LAST_FILE_CHAINLINK" || echo "[WARNING] $LAST_FILE_CHAINLINK absent."
+concat_with_header_sync "$LAST_FILE_UNISWAP"  "$DATA_FILE_UNISWAP"
+concat_with_header_sync "$LAST_FILE_CHAINLINK" "$DATA_FILE_CHAINLINK"
 
 # 9. Pools supplémentaires
 
@@ -141,12 +144,7 @@ else
   echo "[WARNING] Aucun CSV cryo pour aave_usdt, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-if [[ -f "$LAST_FILE_POOL" ]]; then
-  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
-  rm "$LAST_FILE_POOL"
-else
-  echo "[WARNING] $LAST_FILE_POOL non trouvé."
-fi
+concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
 
 # aave_weth_uniswap_v3_03
 echo "[INFO] --- Traitement aave_weth_uniswap_v3_03 ---"
@@ -168,12 +166,7 @@ else
   echo "[WARNING] Aucun CSV cryo pour aave_weth_v3, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-if [[ -f "$LAST_FILE_POOL" ]]; then
-  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
-  rm "$LAST_FILE_POOL"
-else
-  echo "[WARNING] $LAST_FILE_POOL non trouvé."
-fi
+concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
 
 # aave_eth_sushiswap_v2_03
 echo "[INFO] --- Traitement aave_eth_sushiswap_v2_03 ---"
@@ -195,12 +188,7 @@ else
   echo "[WARNING] Aucun CSV cryo pour aave_eth_sushi_v2, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-if [[ -f "$LAST_FILE_POOL" ]]; then
-  tail -n +2 "$LAST_FILE_POOL" >> "$DATA_FILE_POOL"
-  rm "$LAST_FILE_POOL"
-else
-  echo "[WARNING] $LAST_FILE_POOL non trouvé."
-fi
+concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
 
 # 10. MAJ README
 echo "[INFO] Lancement de generate_readme.py..."

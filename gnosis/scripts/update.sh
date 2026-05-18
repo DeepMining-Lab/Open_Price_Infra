@@ -23,10 +23,29 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/update_$(date +"%Y%m%d_%H%M%S").log"
 
 
+find "$LOG_DIR" -name "*.log" -mtime +30 -delete && echo "[INFO] Anciens logs (>30j) supprimés." || true
+
 echo "=== Démarrage du script update.sh ($(date)) ===" | tee -a "$LOG_FILE"
 # Rediriger stdout et stderr vers le fichier de log (tout en conservant l'affichage)
 exec > >(awk '{ print strftime("%Y-%m-%d %H:%M:%S"), "-", $0; fflush(); }' | tee -a "$LOG_FILE") 2>&1
 
+concat_with_header_sync() {
+  local last="$1" data="$2"
+  if [[ ! -f "$last" ]]; then
+    echo "[WARNING] $last non trouvé, aucune concaténation effectuée."
+    return
+  fi
+  local last_hdr data_hdr
+  last_hdr=$(head -1 "$last")
+  data_hdr=$(head -1 "$data")
+  if [[ "$last_hdr" != "$data_hdr" ]]; then
+    echo "[WARNING] Schema mismatch détecté pour $(basename "$data") — mise à jour du header"
+    sed -i "1s|.*|${last_hdr}|" "$data"
+  fi
+  echo "[INFO] Concaténation de $last dans $data"
+  tail -n +2 "$last" >> "$data"
+  rm "$last"
+}
 
 # Chemins absolus
 DATA_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_gno_usd.csv"
@@ -76,23 +95,7 @@ python3 "$PROJECT_DIR/scripts/chainlink_gno_usd.py" --debut "$start_ts_chainlink
 echo "[INFO] Traitement Chainlink terminé"
 
 
-# Concaténer chainlink_eth_usd_last.csv dans chainlink_eth_usd.csv
-
-if [[ -f "$LAST_FILE_CHAINLINK" ]]; then
-  echo "[INFO] Concaténation de $LAST_FILE_CHAINLINK dans $DATA_FILE_CHAINLINK"
-  tail -n +2 "$LAST_FILE_CHAINLINK" >> "$DATA_FILE_CHAINLINK"
-else
-  echo "[WARNING] $LAST_FILE_CHAINLINK non trouvé, aucune concaténation effectuée."
-fi
-
-# Supprimer les fichiers une fois concaténés
-
-if [[ -f "$LAST_FILE_CHAINLINK" ]]; then
-  echo "[INFO] Suppression de $LAST_FILE_CHAINLINK"
-  rm "$LAST_FILE_CHAINLINK"
-else
-  echo "[WARNING] $LAST_FILE_CHAINLINK non n'a pas été supprimé."
-fi
+concat_with_header_sync "$LAST_FILE_CHAINLINK" "$DATA_FILE_CHAINLINK"
 
 # MAJ du README
 echo "[INFO] Lancement de generate_readme.py..."
