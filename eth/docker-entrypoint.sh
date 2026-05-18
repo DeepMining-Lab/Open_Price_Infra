@@ -28,6 +28,7 @@ git_update() {
   git reset --hard origin/main
   git clean -fd
   git pull --rebase origin main || echo "[WARNING] git pull a échoué, utilisation des scripts actuels."
+  chmod +x ./scripts/*.sh
 }
 
 echo "=== Démarrage initial ==="
