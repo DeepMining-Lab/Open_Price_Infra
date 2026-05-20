@@ -12,8 +12,11 @@ import glob
 import pytz
 import uuid
 import hashlib
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 mp.dps = 50
+
+MAX_WORKERS = 32
 
 RPC_URL = os.environ.get("RPC", "")
 if not RPC_URL:
@@ -117,8 +120,8 @@ def decode_swap_event(data_hex):
         liquidity    = int(data[192:256], 16)
         tick         = int.from_bytes(bytes.fromhex(data[256:320]), byteorder='big', signed=True)
 
-        usdc_amount  = mp.mpf(amount0) / 10**TOKEN0_DECIMALS  # USDC
-        eth_amount   = mp.mpf(amount1) / 10**TOKEN1_DECIMALS  # WETH
+        usdc_amount  = mp.mpf(amount0) / 10**TOKEN0_DECIMALS
+        eth_amount   = mp.mpf(amount1) / 10**TOKEN1_DECIMALS
         return usdc_amount, eth_amount, sqrtPriceX96, liquidity, tick, amount0, amount1
     except Exception as e:
         print(f"Erreur dans decode_swap_event: {e}")
@@ -140,78 +143,73 @@ def calculate_price(sqrtPriceX96, eth_amount, usdc_amount):
 
 
 def get_balance_of(web3, token_address, holder_address, block_number):
-    selector   = "0x70a08231"
-    padded     = holder_address[2:].lower().zfill(64)
-    result     = web3.eth.call(
-        {'to': token_address, 'data': selector + padded},
-        block_number,
-    )
+    selector = "0x70a08231"
+    padded   = holder_address[2:].lower().zfill(64)
+    result   = web3.eth.call({'to': token_address, 'data': selector + padded}, block_number)
     return int(result.hex(), 16)
 
 
-def get_tvl_at_block(web3, block_number, price_usdc_per_eth):
+def fetch_block(web3, bn):
     try:
-        raw0 = get_balance_of(web3, TOKEN0_ADDRESS, POOL_ADDRESS, block_number)
-        raw1 = get_balance_of(web3, TOKEN1_ADDRESS, POOL_ADDRESS, block_number)
-        bal0 = mp.mpf(raw0) / 10**TOKEN0_DECIMALS  # USDC ≈ 1 USD
-        bal1 = mp.mpf(raw1) / 10**TOKEN1_DECIMALS  # WETH, valorisé en USD
-        return float(bal0 + bal1 * price_usdc_per_eth)
+        block = web3.eth.get_block(bn)
+        return bn, (datetime.fromtimestamp(block['timestamp'], tz=pytz.UTC), block['hash'].hex())
     except Exception as e:
-        print(f"Erreur TVL au bloc {block_number}: {e}")
-        return None
+        print(f"Erreur bloc {bn}: {e}")
+        return bn, (None, None)
 
 
-def get_slip_1k(web3, block_number, price_usdc_per_eth):
+def get_all_metrics(web3, bn, price_ref, quoter):
+    # TVL: 2 balanceOf calls
     try:
-        quoter    = web3.eth.contract(
-            address=Web3.to_checksum_address(QUOTER_V2_ADDRESS),
-            abi=QUOTER_V2_ABI,
-        )
-        amount_in = 1000 * 10**TOKEN0_DECIMALS  # 1 000 USDC en unités brutes
-        result    = quoter.functions.quoteExactInputSingle({
+        raw0 = get_balance_of(web3, TOKEN0_ADDRESS, POOL_ADDRESS, bn)
+        raw1 = get_balance_of(web3, TOKEN1_ADDRESS, POOL_ADDRESS, bn)
+        bal0 = mp.mpf(raw0) / 10**TOKEN0_DECIMALS
+        bal1 = mp.mpf(raw1) / 10**TOKEN1_DECIMALS
+        tvl = float(bal0 + bal1 * price_ref)
+    except Exception as e:
+        print(f"Erreur TVL bloc {bn}: {e}")
+        tvl = None
+
+    # slip_1k: 1 000 USDC → WETH
+    try:
+        result = quoter.functions.quoteExactInputSingle({
             'tokenIn':           Web3.to_checksum_address(TOKEN0_ADDRESS),
             'tokenOut':          Web3.to_checksum_address(TOKEN1_ADDRESS),
-            'amountIn':          amount_in,
+            'amountIn':          1000 * 10**TOKEN0_DECIMALS,
             'fee':               POOL_FEE_TIER,
             'sqrtPriceLimitX96': 0,
-        }).call(block_identifier=block_number)
-
+        }).call(block_identifier=bn)
         eth_received  = mp.mpf(result[0]) / 10**TOKEN1_DECIMALS
-        expected_eth  = mp.mpf(1000) / price_usdc_per_eth
-        return float(1 - eth_received / expected_eth)
+        expected_eth  = mp.mpf(1000) / price_ref
+        slip1k = float(1 - eth_received / expected_eth)
     except Exception as e:
-        print(f"Erreur slip_1k au bloc {block_number}: {e}")
-        return None
+        print(f"Erreur slip_1k bloc {bn}: {e}")
+        slip1k = None
 
-
-def get_slip_10k(web3, block_number, price_usdc_per_eth):
+    # slip_10k: 10 000 USDC → WETH
     try:
-        quoter    = web3.eth.contract(
-            address=Web3.to_checksum_address(QUOTER_V2_ADDRESS),
-            abi=QUOTER_V2_ABI,
-        )
-        amount_in = 10000 * 10**TOKEN0_DECIMALS  # 10 000 USDC en unités brutes
-        result    = quoter.functions.quoteExactInputSingle({
+        result = quoter.functions.quoteExactInputSingle({
             'tokenIn':           Web3.to_checksum_address(TOKEN0_ADDRESS),
             'tokenOut':          Web3.to_checksum_address(TOKEN1_ADDRESS),
-            'amountIn':          amount_in,
+            'amountIn':          10000 * 10**TOKEN0_DECIMALS,
             'fee':               POOL_FEE_TIER,
             'sqrtPriceLimitX96': 0,
-        }).call(block_identifier=block_number)
+        }).call(block_identifier=bn)
         eth_received  = mp.mpf(result[0]) / 10**TOKEN1_DECIMALS
-        expected_eth  = mp.mpf(10000) / price_usdc_per_eth
-        return float(1 - eth_received / expected_eth)
+        expected_eth  = mp.mpf(10000) / price_ref
+        slip10k = float(1 - eth_received / expected_eth)
     except Exception as e:
-        print(f"Erreur slip_10k au bloc {block_number}: {e}")
-        return None
+        print(f"Erreur slip_10k bloc {bn}: {e}")
+        slip10k = None
+
+    return bn, tvl, slip1k, slip10k
 
 
-def process_uniswap_logs(csv_path, web3):
+def process_uniswap_logs(csv_path, web3, quoter):
     try:
         print(f"Lecture du fichier: {csv_path}")
         df = pd.read_csv(csv_path)
         print(f"Nombre de lignes: {len(df)}")
-        print("Colonnes disponibles:", df.columns.tolist())
 
         if 'data' not in df.columns:
             print("Erreur: colonne 'data' absente du CSV")
@@ -220,7 +218,6 @@ def process_uniswap_logs(csv_path, web3):
         df = df.sort_values(["block_number", "log_index"], ignore_index=True)
 
         chain_id_rpc = web3.eth.chain_id
-
         node_head_block_at_extraction = web3.eth.block_number
         sync_status = web3.eth.syncing
         node_sync_completion_block = node_head_block_at_extraction if sync_status is False else sync_status.get('currentBlock', node_head_block_at_extraction)
@@ -234,32 +231,25 @@ def process_uniswap_logs(csv_path, web3):
         token0_symbol = get_token_symbol(web3, TOKEN0_ADDRESS)
         token1_symbol = get_token_symbol(web3, TOKEN1_ADDRESS)
 
+        # Récupération des blocs en parallèle
         block_numbers = list(set(df['block_number'].tolist()))
         print(f"Blocs uniques à récupérer : {len(block_numbers)}")
-
         blocks = {}
-        for bn in block_numbers:
-            try:
-                block = web3.eth.get_block(bn)
-                blocks[bn] = (datetime.fromtimestamp(block['timestamp'], tz=pytz.UTC), block['hash'].hex())
-            except Exception as e:
-                print(f"Erreur bloc {bn}: {e}")
-                blocks[bn] = (None, None)
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {executor.submit(fetch_block, web3, bn): bn for bn in block_numbers}
+            for future in as_completed(futures):
+                bn, result = future.result()
+                blocks[bn] = result
 
         rows = []
         block_last_price = {}
 
-        total_rows = len(df)
         for index, row in df.iterrows():
             try:
-                print(f"Traitement ligne {index + 1}/{total_rows}")
                 if row['topic0'] != EXPECTED_TOPIC0:
-                    print("topic0 inattendu, ignoré.")
                     continue
-
                 log_address = str(row.get("address", "")).lower()
                 if log_address and log_address != POOL_ADDRESS.lower():
-                    print(f"pool_address inattendue ({log_address}), ignorée.")
                     continue
 
                 usdc_amount, eth_amount, sqrtPriceX96, liquidity, tick, amount0_raw, amount1_raw = decode_swap_event(row['data'])
@@ -288,10 +278,6 @@ def process_uniswap_logs(csv_path, web3):
                     'pool_address':       row.get('address', POOL_ADDRESS),
                     'pool_fee_tier':      POOL_FEE_TIER,
                     'chain_id':           row.get('chain_id', chain_id_rpc),
-                    'sqrt_price_x96':     sqrtPriceX96,
-                    'liquidity':          liquidity,
-                    'tick':               tick,
-                    # --- Nouveaux champs metadata extraction ---
                     'extraction_run_id':              extraction_run_id,
                     'schema_version':                 SCHEMA_VERSION,
                     'extraction_timestamp_utc':       extraction_timestamp_utc,
@@ -304,12 +290,10 @@ def process_uniswap_logs(csv_path, web3):
                     'extraction_script_hash':         extraction_script_hash,
                     'abi_hash':                       abi_hash,
                     'network_name':                   NETWORK_NAME,
-                    # --- Nouveaux champs bloc/transaction ---
                     'block_timestamp_utc':            str(timestamp),
                     'block_hash':                     block_hash,
                     'transaction_index':              row.get('transaction_index'),
                     'event_signature':                EVENT_SIGNATURE,
-                    # --- Nouveaux champs DEX ---
                     'dex_protocol':                   DEX_PROTOCOL,
                     'dex_version':                    DEX_VERSION,
                     'token0_address':                 TOKEN0_ADDRESS,
@@ -340,17 +324,23 @@ def process_uniswap_logs(csv_path, web3):
             print("Aucun prix valide collecté")
             return pd.DataFrame()
 
+        # Calcul TVL + slip en parallèle (1 seul appel get_all_metrics par bloc)
         unique_blocks = list(block_last_price.keys())
-        print(f"\nCal TVL et slip_1k pour {len(unique_blocks)} blocs uniques...")
+        print(f"Cal TVL et slip pour {len(unique_blocks)} blocs uniques (parallèle)...")
 
-        tvl_cache   = {}
-        slip_cache  = {}
+        tvl_cache     = {}
+        slip_cache    = {}
         slip10k_cache = {}
-        for bn in unique_blocks:
-            price_ref = block_last_price[bn]
-            tvl_cache[bn]    = get_tvl_at_block(web3, bn, price_ref)
-            slip_cache[bn]   = get_slip_1k(web3, bn, price_ref)
-            slip10k_cache[bn] = get_slip_10k(web3, bn, price_ref)
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {
+                executor.submit(get_all_metrics, web3, bn, block_last_price[bn], quoter): bn
+                for bn in unique_blocks
+            }
+            for future in as_completed(futures):
+                bn, tvl, slip1k, slip10k = future.result()
+                tvl_cache[bn]     = tvl
+                slip_cache[bn]    = slip1k
+                slip10k_cache[bn] = slip10k
 
         for r in rows:
             r['pool_tvl_at_block'] = tvl_cache.get(r['block_number'])
@@ -362,8 +352,7 @@ def process_uniswap_logs(csv_path, web3):
             )
 
         result_df = pd.DataFrame(rows)
-        print(f"\nDataFrame créé avec {len(result_df)} lignes")
-        print("\nAperçu des prix:")
+        print(f"DataFrame créé avec {len(result_df)} lignes")
         print(result_df['price_usdc_per_eth'].describe())
         return result_df
 
@@ -387,6 +376,12 @@ def main(output_filename='eth_usdc_uniswap_v3_005_last.csv'):
         sys.exit(1)
     print(f"Connexion établie: {web3.is_connected()}")
 
+    # Quoter créé une seule fois et réutilisé pour tous les batchs
+    quoter = web3.eth.contract(
+        address=Web3.to_checksum_address(QUOTER_V2_ADDRESS),
+        abi=QUOTER_V2_ABI,
+    )
+
     here2 = os.path.dirname(__file__)
     data_dir2 = os.path.normpath(os.path.join(here2, os.pardir, 'data'))
     output_path = os.path.join(data_dir2, output_filename)
@@ -394,7 +389,7 @@ def main(output_filename='eth_usdc_uniswap_v3_005_last.csv'):
     total_rows = 0
     first_write = True
     for csv_file in csv_files:
-        prices = process_uniswap_logs(csv_file, web3)
+        prices = process_uniswap_logs(csv_file, web3, quoter)
         if not prices.empty:
             prices = prices.sort_values("timestamp").reset_index(drop=True)
             prices.to_csv(output_path, mode='a', header=first_write, index=False)

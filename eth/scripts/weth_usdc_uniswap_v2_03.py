@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0
 # © 2025 HES-SO / HEG Geneva / Deep Mining Lab / FairOnChain / Open Price ETH
 
+import gc
 import pandas as pd
 from web3 import Web3
 from datetime import datetime, timezone
@@ -11,8 +12,11 @@ import glob
 import pytz
 import uuid
 import hashlib
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 mp.dps = 50
+
+MAX_WORKERS = 32
 
 RPC_URL = os.environ.get("RPC", "")
 if not RPC_URL:
@@ -88,9 +92,8 @@ def decode_swap_event(data_hex):
         amount1In  = int(data[64:128],  16)
         amount0Out = int(data[128:192], 16)
         amount1Out = int(data[192:256], 16)
-        amount0_raw_int = amount0In - amount0Out   # flux net brut token0
-        amount1_raw_int = amount1In - amount1Out   # flux net brut token1
-        # Signed net flows (positive = into pool)
+        amount0_raw_int = amount0In - amount0Out
+        amount1_raw_int = amount1In - amount1Out
         net0 = mp.mpf(amount0_raw_int) / 10**TOKEN0_DECIMALS  # USDC
         net1 = mp.mpf(amount1_raw_int) / 10**TOKEN1_DECIMALS  # WETH
         return net0, net1, amount0_raw_int, amount1_raw_int
@@ -121,43 +124,38 @@ def get_reserves(web3, block_number):
     return reserve0, reserve1
 
 
-def get_tvl_at_block(web3, block_number, price_usdc_per_eth):
+def fetch_block(web3, bn):
     try:
-        reserve0, reserve1 = get_reserves(web3, block_number)
-        bal0 = mp.mpf(reserve0) / 10**TOKEN0_DECIMALS  # USDC
-        bal1 = mp.mpf(reserve1) / 10**TOKEN1_DECIMALS  # WETH
-        return float(bal0 + bal1 * price_usdc_per_eth)
+        block = web3.eth.get_block(bn)
+        return bn, (datetime.fromtimestamp(block['timestamp'], tz=pytz.UTC), block['hash'].hex())
     except Exception as e:
-        print(f"Erreur TVL au bloc {block_number}: {e}")
-        return None
+        print(f"Erreur bloc {bn}: {e}")
+        return bn, (None, None)
 
 
-def get_slip_1k(web3, block_number, price_usdc_per_eth):
+def get_all_metrics(web3, bn, price_ref):
+    # Un seul appel get_reserves pour TVL + slip_1k + slip_10k
     try:
-        reserve0, reserve1 = get_reserves(web3, block_number)
-        # Simulation: 1 000 USDC → WETH (tokenIn=USDC=token0, tokenOut=WETH=token1)
-        amount_in = mp.mpf(1000) * 10**TOKEN0_DECIMALS
-        amount_out = (997 * amount_in * reserve1) / (1000 * reserve0 + 997 * amount_in)
-        eth_received  = amount_out / 10**TOKEN1_DECIMALS
-        expected_eth  = mp.mpf(1000) / price_usdc_per_eth
-        return float(1 - eth_received / expected_eth)
-    except Exception as e:
-        print(f"Erreur slip_1k au bloc {block_number}: {e}")
-        return None
+        r0, r1 = get_reserves(web3, bn)  # r0=USDC, r1=WETH
 
+        bal0 = mp.mpf(r0) / 10**TOKEN0_DECIMALS  # USDC
+        bal1 = mp.mpf(r1) / 10**TOKEN1_DECIMALS  # WETH
+        tvl = float(bal0 + bal1 * price_ref)
 
-def get_slip_10k(web3, block_number, price_usdc_per_eth):
-    try:
-        reserve0, reserve1 = get_reserves(web3, block_number)
-        # Simulation: 10 000 USDC → WETH (tokenIn=USDC=token0, tokenOut=WETH=token1)
-        amount_in = mp.mpf(10000) * 10**TOKEN0_DECIMALS
-        amount_out = (997 * amount_in * reserve1) / (1000 * reserve0 + 997 * amount_in)
-        eth_received  = amount_out / 10**TOKEN1_DECIMALS
-        expected_eth  = mp.mpf(10000) / price_usdc_per_eth
-        return float(1 - eth_received / expected_eth)
+        # slip_1k: 1 000 USDC → WETH (tokenIn=USDC=token0, tokenOut=WETH=token1)
+        ain_1k  = mp.mpf(1000)  * 10**TOKEN0_DECIMALS
+        aout_1k = (997 * ain_1k * r1) / (1000 * r0 + 997 * ain_1k)
+        slip1k  = float(1 - (aout_1k / 10**TOKEN1_DECIMALS) / (mp.mpf(1000)  / price_ref))
+
+        # slip_10k: 10 000 USDC → WETH
+        ain_10k  = mp.mpf(10000) * 10**TOKEN0_DECIMALS
+        aout_10k = (997 * ain_10k * r1) / (1000 * r0 + 997 * ain_10k)
+        slip10k  = float(1 - (aout_10k / 10**TOKEN1_DECIMALS) / (mp.mpf(10000) / price_ref))
+
+        return bn, (r0, r1), tvl, slip1k, slip10k
     except Exception as e:
-        print(f"Erreur slip_10k au bloc {block_number}: {e}")
-        return None
+        print(f"Erreur métriques bloc {bn}: {e}")
+        return bn, (None, None), None, None, None
 
 
 def process_swap_logs(csv_path, web3):
@@ -185,22 +183,19 @@ def process_swap_logs(csv_path, web3):
         token0_symbol = get_token_symbol(web3, TOKEN0_ADDRESS)
         token1_symbol = get_token_symbol(web3, TOKEN1_ADDRESS)
 
+        # Récupération des blocs en parallèle
         block_numbers = list(set(df['block_number'].tolist()))
         blocks = {}
-        for bn in block_numbers:
-            try:
-                block = web3.eth.get_block(bn)
-                blocks[bn] = (datetime.fromtimestamp(block['timestamp'], tz=pytz.UTC), block['hash'].hex())
-            except Exception as e:
-                print(f"Erreur bloc {bn}: {e}")
-                blocks[bn] = (None, None)
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {executor.submit(fetch_block, web3, bn): bn for bn in block_numbers}
+            for future in as_completed(futures):
+                bn, result = future.result()
+                blocks[bn] = result
 
         rows = []
         block_last_price = {}
-        total_rows = len(df)
         for index, row in df.iterrows():
             try:
-                print(f"Traitement ligne {index + 1}/{total_rows}")
                 if row['topic0'] != EXPECTED_TOPIC0:
                     continue
                 log_address = str(row.get("address", "")).lower()
@@ -231,7 +226,6 @@ def process_swap_logs(csv_path, web3):
                     'pool_address':        row.get('address', POOL_ADDRESS),
                     'pool_fee_tier':       POOL_FEE_TIER,
                     'chain_id':            row.get('chain_id', chain_id_rpc),
-                    # --- Nouveaux champs metadata extraction ---
                     'extraction_run_id':              extraction_run_id,
                     'schema_version':                 SCHEMA_VERSION,
                     'extraction_timestamp_utc':       extraction_timestamp_utc,
@@ -244,12 +238,10 @@ def process_swap_logs(csv_path, web3):
                     'extraction_script_hash':         extraction_script_hash,
                     'abi_hash':                       abi_hash,
                     'network_name':                   NETWORK_NAME,
-                    # --- Nouveaux champs bloc/transaction ---
                     'block_timestamp_utc':            str(timestamp),
                     'block_hash':                     block_hash,
                     'transaction_index':              row.get('transaction_index'),
                     'event_signature':                EVENT_SIGNATURE,
-                    # --- Nouveaux champs DEX ---
                     'dex_protocol':                   DEX_PROTOCOL,
                     'dex_version':                    DEX_VERSION,
                     'token0_address':                 TOKEN0_ADDRESS,
@@ -280,23 +272,25 @@ def process_swap_logs(csv_path, web3):
             print("Aucun prix valide collecté")
             return pd.DataFrame()
 
+        # Calcul réserves + TVL + slip en parallèle (1 seul appel get_reserves par bloc)
         unique_blocks = list(block_last_price.keys())
-        print(f"\nCal réserves, TVL et slip_1k pour {len(unique_blocks)} blocs uniques...")
+        print(f"Cal réserves, TVL et slip pour {len(unique_blocks)} blocs uniques (parallèle)...")
         reserve_cache = {}
         tvl_cache     = {}
         slip_cache    = {}
         slip10k_cache = {}
-        for bn in unique_blocks:
-            price_ref = block_last_price[bn]
-            try:
-                r0, r1 = get_reserves(web3, bn)
-                reserve_cache[bn] = (r0, r1)
-            except Exception as e:
-                print(f"Erreur réserves bloc {bn}: {e}")
-                reserve_cache[bn] = (None, None)
-            tvl_cache[bn]     = get_tvl_at_block(web3, bn, price_ref)
-            slip_cache[bn]    = get_slip_1k(web3, bn, price_ref)
-            slip10k_cache[bn] = get_slip_10k(web3, bn, price_ref)
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {
+                executor.submit(get_all_metrics, web3, bn, block_last_price[bn]): bn
+                for bn in unique_blocks
+            }
+            for future in as_completed(futures):
+                bn, reserves, tvl, slip1k, slip10k = future.result()
+                reserve_cache[bn] = reserves
+                tvl_cache[bn]     = tvl
+                slip_cache[bn]    = slip1k
+                slip10k_cache[bn] = slip10k
+
         for r in rows:
             bn = r['block_number']
             r0, r1 = reserve_cache.get(bn, (None, None))
@@ -311,7 +305,7 @@ def process_swap_logs(csv_path, web3):
             )
 
         result_df = pd.DataFrame(rows)
-        print(f"\nDataFrame créé avec {len(result_df)} lignes")
+        print(f"DataFrame créé avec {len(result_df)} lignes")
         print(result_df['price_usdc_per_eth'].describe())
         return result_df
     except Exception as e:
@@ -327,21 +321,30 @@ def main(output_filename='weth_usdc_uniswap_v2_03_last.csv'):
     if not web3.is_connected():
         print(f"ERREUR: impossible de se connecter à '{RPC_URL}'", file=sys.stderr)
         sys.exit(1)
-    all_prices = pd.DataFrame()
-    for csv_file in csv_files:
-        prices = process_swap_logs(csv_file, web3)
-        if not prices.empty:
-            all_prices = pd.concat([all_prices, prices])
-    if all_prices.empty:
-        print("Aucune donnée traitée.")
-        return None
+
     here2 = os.path.dirname(__file__)
     data_dir2 = os.path.normpath(os.path.join(here2, os.pardir, 'data'))
     output_path = os.path.join(data_dir2, output_filename)
-    all_prices = all_prices.sort_values("timestamp").reset_index(drop=True)
-    all_prices.to_csv(output_path, index=False)
+
+    total_rows = 0
+    first_write = True
+    for csv_file in csv_files:
+        prices = process_swap_logs(csv_file, web3)
+        if not prices.empty:
+            prices = prices.sort_values("timestamp").reset_index(drop=True)
+            prices.to_csv(output_path, mode='a', header=first_write, index=False)
+            total_rows += len(prices)
+            first_write = False
+        del prices
+        gc.collect()
+
+    if total_rows == 0:
+        print("Aucune donnée traitée.")
+        return None
+
     print(f"\nFichier CSV créé: {output_path}")
-    return all_prices
+    print(f"Nombre total d'événements traités: {total_rows}")
+    return True
 
 
 if __name__ == "__main__":
