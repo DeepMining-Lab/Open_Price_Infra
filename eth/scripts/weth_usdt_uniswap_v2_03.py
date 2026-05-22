@@ -27,7 +27,7 @@ if not RPC_URL:
 #                              uint256 amount0Out, uint256 amount1Out, address indexed to)
 EXPECTED_TOPIC0 = "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822"
 
-POOL_ADDRESS    = "0x0d4a11d5EEaaC28EC3F61d100dAF4d40471f1852"
+POOL_ADDRESS    = Web3.to_checksum_address("0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852")
 TOKEN0_ADDRESS  = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"  # WETH
 TOKEN1_ADDRESS  = "0xdAC17F958D2ee523a2206206994597C13D831ec7"  # USDT
 TOKEN0_DECIMALS = 18  # WETH
@@ -58,7 +58,7 @@ with open(__file__, 'rb') as _f:
 here = os.path.dirname(__file__)
 data_dir = os.path.normpath(os.path.join(here, os.pardir, 'data', 'output'))
 pattern = os.path.join(data_dir, '*.csv')
-csv_files = glob.glob(pattern)
+csv_files = sorted(glob.glob(pattern))
 
 
 def get_token_symbol(web3, token_address):

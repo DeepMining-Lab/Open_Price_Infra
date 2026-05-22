@@ -58,7 +58,7 @@ with open(__file__, 'rb') as _f:
 here = os.path.dirname(__file__)
 data_dir = os.path.normpath(os.path.join(here, os.pardir, 'data', 'output'))
 pattern = os.path.join(data_dir, '*.csv')
-csv_files = glob.glob(pattern)
+csv_files = sorted(glob.glob(pattern))
 
 
 def get_token_symbol(web3, token_address):
