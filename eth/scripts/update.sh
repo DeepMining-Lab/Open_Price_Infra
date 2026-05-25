@@ -30,7 +30,7 @@ echo "=== Démarrage du script update.sh ($(date)) ===" | tee -a "$LOG_FILE"
 exec > >(awk '{ print strftime("%Y-%m-%d %H:%M:%S"), "-", $0; fflush(); }' | tee -a "$LOG_FILE") 2>&1
 
 concat_with_header_sync() {
-  local last="$1" data="$2"
+  local last="$1" data="$2" ts_col="${3:-1}"
   if [[ ! -f "$last" ]]; then
     echo "[WARNING] $last non trouvé, aucune concaténation effectuée."
     return
@@ -42,8 +42,14 @@ concat_with_header_sync() {
     echo "[WARNING] Schema mismatch détecté pour $(basename "$data") — mise à jour du header"
     sed -i "1s|.*|${last_hdr}|" "$data"
   fi
-  echo "[INFO] Concaténation de $last dans $data"
-  tail -n +2 "$last" >> "$data"
+  local last_ts
+  last_ts=$(tail -n 1 "$data" | cut -d',' -f"$ts_col")
+  echo "[INFO] Concaténation de $last dans $data (depuis $last_ts)"
+  if [[ -z "$last_ts" ]] || [[ "$last_ts" == "timestamp" ]] || [[ "$last_ts" == "round_updated_at_utc" ]]; then
+    tail -n +2 "$last" >> "$data"
+  else
+    awk -F',' -v ts="$last_ts" -v col="$ts_col" 'NR>1 && $(col) > ts' "$last" >> "$data"
+  fi
   rm "$last"
 }
 
@@ -155,7 +161,7 @@ fi
 
 # 7. Concaténation
 concat_with_header_sync "$LAST_FILE_UNISWAP"  "$DATA_FILE_UNISWAP"
-concat_with_header_sync "$LAST_FILE_CHAINLINK" "$DATA_FILE_CHAINLINK"
+concat_with_header_sync "$LAST_FILE_CHAINLINK" "$DATA_FILE_CHAINLINK" 4
 
 # 9. Pools supplémentaires
 

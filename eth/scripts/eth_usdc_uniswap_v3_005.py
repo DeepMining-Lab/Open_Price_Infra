@@ -389,21 +389,26 @@ def main(output_filename='eth_usdc_uniswap_v3_005_last.csv'):
     data_dir2 = os.path.normpath(os.path.join(here2, os.pardir, 'data'))
     output_path = os.path.join(data_dir2, output_filename)
 
-    total_rows = 0
-    first_write = True
+    all_dfs = []
     for csv_file in csv_files:
         prices = process_uniswap_logs(csv_file, web3, quoter)
         if not prices.empty:
-            prices = prices.sort_values("timestamp").reset_index(drop=True)
-            prices.to_csv(output_path, mode='a', header=first_write, index=False)
-            total_rows += len(prices)
-            first_write = False
+            all_dfs.append(prices)
         del prices
         gc.collect()
 
-    if total_rows == 0:
+    if not all_dfs:
         print("Aucune donnée traitée.")
         return None
+
+    combined = pd.concat(all_dfs, ignore_index=True)
+    del all_dfs
+    gc.collect()
+    combined = combined.sort_values(["timestamp", "block_number", "log_index"]).reset_index(drop=True)
+    combined.to_csv(output_path, index=False)
+    total_rows = len(combined)
+    del combined
+    gc.collect()
 
     print(f"\nFichier CSV créé: {output_path}")
     print(f"Nombre total d'événements traités: {total_rows}")
