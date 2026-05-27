@@ -160,7 +160,8 @@ fi
 
 
 # 7. Concaténation
-concat_with_header_sync "$LAST_FILE_UNISWAP"  "$DATA_FILE_UNISWAP"
+python3 "$PROJECT_DIR/scripts/dedup_concat.py" "$LAST_FILE_UNISWAP" "$DATA_FILE_UNISWAP" \
+  || echo "[WARNING] Échec dedup_concat pour $(basename $DATA_FILE_UNISWAP)" >&2
 concat_with_header_sync "$LAST_FILE_CHAINLINK" "$DATA_FILE_CHAINLINK" 4
 
 # 9. Pools supplémentaires
@@ -185,7 +186,8 @@ else
   echo "[WARNING] Aucun CSV cryo pour weth_usdc_v2, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
+python3 "$PROJECT_DIR/scripts/dedup_concat.py" "$LAST_FILE_POOL" "$DATA_FILE_POOL" \
+  || echo "[WARNING] Échec dedup_concat pour $(basename $DATA_FILE_POOL)" >&2
 
 # weth_usdt_uniswap_v2_03
 echo "[INFO] --- Traitement weth_usdt_uniswap_v2_03 ---"
@@ -207,7 +209,8 @@ else
   echo "[WARNING] Aucun CSV cryo pour weth_usdt_v2, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
+python3 "$PROJECT_DIR/scripts/dedup_concat.py" "$LAST_FILE_POOL" "$DATA_FILE_POOL" \
+  || echo "[WARNING] Échec dedup_concat pour $(basename $DATA_FILE_POOL)" >&2
 
 # crvusd_weth_curve
 echo "[INFO] --- Traitement crvusd_weth_curve ---"
@@ -229,7 +232,8 @@ else
   echo "[WARNING] Aucun CSV cryo pour crvusd_weth_curve, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
+python3 "$PROJECT_DIR/scripts/dedup_concat.py" "$LAST_FILE_POOL" "$DATA_FILE_POOL" \
+  || echo "[WARNING] Échec dedup_concat pour $(basename $DATA_FILE_POOL)" >&2
 
 # 10. MAJ du README
 echo "[INFO] Lancement de generate_readme.py..."

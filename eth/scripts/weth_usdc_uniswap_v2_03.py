@@ -27,7 +27,7 @@ if not RPC_URL:
 #                              uint256 amount0Out, uint256 amount1Out, address indexed to)
 EXPECTED_TOPIC0 = "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822"
 
-POOL_ADDRESS    = "0xb4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc"
+POOL_ADDRESS    = Web3.to_checksum_address("0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc")
 TOKEN0_ADDRESS  = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"  # USDC
 TOKEN1_ADDRESS  = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"  # WETH
 TOKEN0_DECIMALS = 6   # USDC
@@ -342,6 +342,15 @@ def main(output_filename='weth_usdc_uniswap_v2_03_last.csv'):
     del all_dfs
     gc.collect()
     combined = combined.sort_values(["timestamp", "block_number", "log_index"]).reset_index(drop=True)
+
+    # Validation taux de nulls avant écriture
+    for col in ['reserve0', 'pool_tvl_at_block', 'slip_1k']:
+        null_rate = combined[col].isna().mean()
+        if null_rate > 0.05:
+            print(f"[ERROR] {col}: {null_rate:.1%} de nulls — taux anormal, abandon.", file=sys.stderr)
+            sys.exit(1)
+    print(f"[INFO] Validation nulls OK — reserve0: {combined['reserve0'].isna().mean():.2%} nul(s)")
+
     combined.to_csv(output_path, index=False)
     total_rows = len(combined)
     del combined
