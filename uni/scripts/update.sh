@@ -125,7 +125,8 @@ echo "[INFO] Suppression du contenu de $OUTPUT_DIR"
 rm -rf "$OUTPUT_DIR"/* || echo "[WARNING] Impossible de supprimer $OUTPUT_DIR." >&2
 
 # 7. Concaténation
-concat_with_header_sync "$LAST_FILE_UNISWAP"  "$DATA_FILE_UNISWAP"
+python3 "$PROJECT_DIR/scripts/dedup_concat.py" "$LAST_FILE_UNISWAP" "$DATA_FILE_UNISWAP" \
+  || echo "[WARNING] Échec dedup_concat pour $(basename $DATA_FILE_UNISWAP)" >&2
 concat_with_header_sync "$LAST_FILE_CHAINLINK" "$DATA_FILE_CHAINLINK" 4
 
 # 9. Pools supplémentaires
@@ -150,7 +151,8 @@ else
   echo "[WARNING] Aucun CSV cryo pour uni_usdt, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
+python3 "$PROJECT_DIR/scripts/dedup_concat.py" "$LAST_FILE_POOL" "$DATA_FILE_POOL" \
+  || echo "[WARNING] Échec dedup_concat pour $(basename $DATA_FILE_POOL)" >&2
 
 # uni_weth_uniswap_v3_03
 echo "[INFO] --- Traitement uni_weth_uniswap_v3_03 ---"
@@ -172,7 +174,8 @@ else
   echo "[WARNING] Aucun CSV cryo pour uni_weth_v3, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
+python3 "$PROJECT_DIR/scripts/dedup_concat.py" "$LAST_FILE_POOL" "$DATA_FILE_POOL" \
+  || echo "[WARNING] Échec dedup_concat pour $(basename $DATA_FILE_POOL)" >&2
 
 # uni_weth_uniswap_v2_03
 echo "[INFO] --- Traitement uni_weth_uniswap_v2_03 ---"
@@ -194,7 +197,8 @@ else
   echo "[WARNING] Aucun CSV cryo pour uni_weth_v2, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
+python3 "$PROJECT_DIR/scripts/dedup_concat.py" "$LAST_FILE_POOL" "$DATA_FILE_POOL" \
+  || echo "[WARNING] Échec dedup_concat pour $(basename $DATA_FILE_POOL)" >&2
 
 # uni_eth_sushiswap_v3_03
 echo "[INFO] --- Traitement uni_eth_sushiswap_v3_03 ---"
@@ -216,7 +220,8 @@ else
   echo "[WARNING] Aucun CSV cryo pour uni_eth_sushi_v3, aucun traitement."
 fi
 rm -rf "$OUTPUT_DIR"/* || true
-concat_with_header_sync "$LAST_FILE_POOL" "$DATA_FILE_POOL"
+python3 "$PROJECT_DIR/scripts/dedup_concat.py" "$LAST_FILE_POOL" "$DATA_FILE_POOL" \
+  || echo "[WARNING] Échec dedup_concat pour $(basename $DATA_FILE_POOL)" >&2
 
 # 10. MAJ README
 echo "[INFO] Lancement de generate_readme.py..."

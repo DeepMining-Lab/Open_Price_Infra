@@ -28,9 +28,10 @@ if not RPC_URL:
     print("ERREUR: la variable d'environnement 'RPC' n'est pas définie.", file=sys.stderr)
     sys.exit(1)
 
-# Curve TokenExchange(address indexed buyer, int128 sold_id, uint256 tokens_sold,
-#                     int128 bought_id, uint256 tokens_bought)
-EXPECTED_TOPIC0 = "0x8b3e96f2b889fa771c53c981b40daf005f63f637f1869f707052d15a3dd97140"
+# Curve StableSwap NG — TokenExchange(address indexed buyer, uint256 indexed sold_id,
+#   uint256 tokens_sold, uint256 bought_id, uint256 tokens_bought,
+#   uint256 fee, uint256 packed_price_scale)
+EXPECTED_TOPIC0 = "0x0e1f3c59f25a027e14a3f55c68245d22089c42b1dcd09f123a11d4af3c0d6f72"
 
 POOL_ADDRESS    = "0x6e5492f8Ea2370844eE098a56dD88e1717E4A9C2"
 TOKEN0_ADDRESS  = "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E"  # crvUSD
@@ -64,7 +65,7 @@ BASE_TOKEN_SYMBOL       = "crvUSD"
 QUOTE_TOKEN_SYMBOL      = "WETH"
 PRICE_SOURCE_FIELD      = "amount_ratio"
 EVENT_SIGNATURE         = EXPECTED_TOPIC0
-SWAP_EVENT_ABI          = '[{"name":"TokenExchange","inputs":[{"name":"buyer","type":"address","indexed":true},{"name":"sold_id","type":"int128","indexed":false},{"name":"tokens_sold","type":"uint256","indexed":false},{"name":"bought_id","type":"int128","indexed":false},{"name":"tokens_bought","type":"uint256","indexed":false}],"anonymous":false,"type":"event"}]'
+SWAP_EVENT_ABI          = '[{"name":"TokenExchange","inputs":[{"name":"buyer","type":"address","indexed":true},{"name":"sold_id","type":"uint256","indexed":true},{"name":"tokens_sold","type":"uint256","indexed":false},{"name":"bought_id","type":"uint256","indexed":false},{"name":"tokens_bought","type":"uint256","indexed":false},{"name":"fee","type":"uint256","indexed":false},{"name":"packed_price_scale","type":"uint256","indexed":false}],"anonymous":false,"type":"event"}]'
 ERC20_SYMBOL_ABI        = [{"name":"symbol","type":"function","inputs":[],"outputs":[{"name":"","type":"string"}],"stateMutability":"view"}]
 
 extraction_run_id        = str(uuid.uuid4())
@@ -76,7 +77,7 @@ with open(__file__, 'rb') as _f:
 here = os.path.dirname(__file__)
 data_dir = os.path.normpath(os.path.join(here, os.pardir, 'data', 'output'))
 pattern = os.path.join(data_dir, '*.csv')
-csv_files = glob.glob(pattern)
+csv_files = sorted(glob.glob(pattern))
 
 
 def get_token_symbol(web3, token_address):
@@ -103,25 +104,38 @@ def compute_quality_flags(pool_tvl, amount0_raw, amount1_raw, slip_1k, threshold
     return '|'.join(flags) if flags else "ok"
 
 
-def decode_swap_event(data_hex):
-    try:
-        data = data_hex.replace('0x', '')
-        sold_id       = int.from_bytes(bytes.fromhex(data[0:64]),   byteorder='big', signed=True)
-        tokens_sold   = int(data[64:128],  16)
-        bought_id     = int.from_bytes(bytes.fromhex(data[128:192]), byteorder='big', signed=True)
-        tokens_bought = int(data[192:256], 16)
+def decode_swap_event(data_hex, sold_id_topic):
+    """Décode un événement TokenExchange Curve StableSwap NG.
 
-        sold_dec  = mp.mpf(tokens_sold)   / 10**TOKEN0_DECIMALS
+    Dans le format NG, sold_id est indexé → il est dans topic2 (sold_id_topic),
+    PAS dans le champ data. Le champ data contient (dans l'ordre) :
+      [0]  tokens_sold       (uint256)
+      [1]  bought_id         (uint256)
+      [2]  tokens_bought     (uint256)
+      [3]  fee               (uint256, informatif)
+      [4]  packed_price_scale (uint256, informatif)
+    """
+    try:
+        # sold_id vient du topic2 (uint256)
+        sold_id = int(str(sold_id_topic).replace('0x', ''), 16)
+
+        data = data_hex.replace('0x', '')
+        tokens_sold   = int(data[0:64],   16)
+        bought_id     = int(data[64:128],  16)
+        tokens_bought = int(data[128:192], 16)
+        # data[192:256] = fee, data[256:320] = packed_price_scale (ignorés)
+
+        sold_dec   = mp.mpf(tokens_sold)   / 10**TOKEN0_DECIMALS
         bought_dec = mp.mpf(tokens_bought) / 10**TOKEN1_DECIMALS
 
         if sold_id == 0:
-            # crvUSD sold → WETH bought
-            crvusd_amount   = sold_dec
+            # coin0 (crvUSD) vendu → coin1 (WETH) acheté
+            crvusd_amount   =  sold_dec
             weth_amount     = -bought_dec
             amount0_raw_int =  int(tokens_sold)
             amount1_raw_int = -int(tokens_bought)
         else:
-            # WETH sold → crvUSD bought
+            # coin1 (WETH) vendu → coin0 (crvUSD) acheté
             crvusd_amount   = -bought_dec
             weth_amount     =  sold_dec
             amount0_raw_int = -int(tokens_bought)
@@ -130,7 +144,7 @@ def decode_swap_event(data_hex):
         return crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought, amount0_raw_int, amount1_raw_int
     except Exception as e:
         print(f"Erreur dans decode_swap_event: {e}")
-        print(f"Data hex reçue: {data_hex}")
+        print(f"Data hex reçue: {data_hex}, sold_id_topic: {sold_id_topic}")
         raise
 
 
@@ -240,7 +254,7 @@ def process_curve_logs(csv_path, web3, pool_contract):
                 log_address = str(row.get("address", "")).lower()
                 if log_address and log_address != POOL_ADDRESS.lower():
                     continue
-                crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought, amount0_raw, amount1_raw = decode_swap_event(row['data'])
+                crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought, amount0_raw, amount1_raw = decode_swap_event(row['data'], row.get('topic2'))
                 price, volume = calculate_price(crvusd_amount, weth_amount)
                 block_info = blocks.get(row['block_number'])
                 if not block_info or not block_info[0]:
@@ -345,6 +359,13 @@ def process_curve_logs(csv_path, web3, pool_contract):
         return pd.DataFrame()
 
 
+def _write_atomic(df, path):
+    """Écriture atomique via fichier temporaire."""
+    tmp = path + '.tmp'
+    df.to_csv(tmp, index=False)
+    os.replace(tmp, path)
+
+
 def main(output_filename='crvusd_weth_curve_last.csv'):
     if not csv_files:
         print("Aucun fichier CSV trouvé dans le dossier 'output'")
@@ -380,7 +401,16 @@ def main(output_filename='crvusd_weth_curve_last.csv'):
     del all_dfs
     gc.collect()
     combined = combined.sort_values(["timestamp", "block_number", "log_index"]).reset_index(drop=True)
-    combined.to_csv(output_path, index=False)
+
+    # Validation null-rate avant écriture
+    for col in ['pool_tvl_at_block', 'slip_1k']:
+        null_rate = combined[col].isna().mean()
+        if null_rate > 0.05:
+            print(f"[ERROR] {col}: {null_rate:.1%} de nulls — taux anormal, abandon.", file=sys.stderr)
+            sys.exit(1)
+    print(f"[INFO] Validation nulls OK — pool_tvl_at_block: {combined['pool_tvl_at_block'].isna().mean():.2%} nul(s)")
+
+    _write_atomic(combined, output_path)
     total_rows = len(combined)
     del combined
     gc.collect()
