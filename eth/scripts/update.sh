@@ -60,6 +60,10 @@ OUTPUT_DIR="$PROJECT_DIR/data/output"
 LAST_FILE_UNISWAP="$PROJECT_DIR/data/eth_usdc_uniswap_v3_005_last.csv"
 LAST_FILE_CHAINLINK="$PROJECT_DIR/data/chainlink_eth_usd_last.csv"
 
+# Nettoyage préventif en cas de crash lors d'un run précédent
+echo "[INFO] Nettoyage préventif de $OUTPUT_DIR..."
+rm -rf "$OUTPUT_DIR"/* || true
+
 # Afficher info RPC
 if [[ -z "$RPC" ]]; then
   echo "WARNING: La variable RPC n'est pas définie." >&2
