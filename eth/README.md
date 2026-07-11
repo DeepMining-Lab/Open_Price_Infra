@@ -7,10 +7,10 @@ Open Price ETH is an open-data initiative providing a standardized, continuously
 
 | Dataset                          | End Date Available              | CSV File                                      |
 |----------------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink ETH/USD**         | 2026-07-10 14:19:59 UTC      | `data/chainlink_eth_usd.csv`                  |
-| **Uniswap V3 ETH/USDC**      | 2026-07-10 15:06:59 UTC        | `data/eth_usdc_uniswap_v3_005.csv`            |
-| **Uniswap V2 WETH/USDC**     | 2026-07-10 15:08:59 UTC   | `data/weth_usdc_uniswap_v2_03.csv`            |
-| **Uniswap V2 WETH/USDT**     | 2026-07-10 15:12:23 UTC   | `data/weth_usdt_uniswap_v2_03.csv`            |
+| **Chainlink ETH/USD**         | 2026-07-11 15:40:35 UTC      | `data/chainlink_eth_usd.csv`                  |
+| **Uniswap V3 ETH/USDC**      | 2026-07-11 16:16:59 UTC        | `data/eth_usdc_uniswap_v3_005.csv`            |
+| **Uniswap V2 WETH/USDC**     | 2026-07-11 16:20:35 UTC   | `data/weth_usdc_uniswap_v2_03.csv`            |
+| **Uniswap V2 WETH/USDT**     | 2026-07-11 16:18:59 UTC   | `data/weth_usdt_uniswap_v2_03.csv`            |
 | **Curve crvUSD/WETH**        | N/A         | `data/crvusd_weth_curve.csv`                  |
 
 ---
