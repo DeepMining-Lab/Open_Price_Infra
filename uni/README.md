@@ -7,12 +7,12 @@ Open Price UNI is an open-data initiative providing a standardized, continuously
 
 | Dataset                          | End Date Available              | CSV File                                      |
 |----------------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink UNI/USD**         | 2026-07-17 15:03:35 UTC      | `data/chainlink_uni_usd.csv`                 |
-| **Uniswap V3 UNI/USDC**      | 2026-07-17 15:06:11 UTC        | `data/uni_usdc_uniswap_v3_03.csv`            |
-| **Uniswap V3 UNI/USDT**      | 2026-07-17 15:06:59 UTC           | `data/uni_usdt_uniswap_v3_03.csv`            |
-| **Uniswap V3 UNI/WETH**      | 2026-07-17 15:06:59 UTC        | `data/uni_weth_uniswap_v3_03.csv`            |
-| **SushiSwap V3 UNI/ETH**     | 2026-07-17 15:06:59 UTC       | `data/uni_eth_sushiswap_v3_03.csv`           |
-| **Uniswap V2 UNI/WETH**      | 2026-07-17 15:06:59 UTC        | `data/uni_weth_uniswap_v2_03.csv`            |
+| **Chainlink UNI/USD**         | 2026-07-18 15:03:35 UTC      | `data/chainlink_uni_usd.csv`                 |
+| **Uniswap V3 UNI/USDC**      | 2026-07-18 14:54:11 UTC        | `data/uni_usdc_uniswap_v3_03.csv`            |
+| **Uniswap V3 UNI/USDT**      | 2026-07-18 14:52:11 UTC           | `data/uni_usdt_uniswap_v3_03.csv`            |
+| **Uniswap V3 UNI/WETH**      | 2026-07-18 14:52:47 UTC        | `data/uni_weth_uniswap_v3_03.csv`            |
+| **SushiSwap V3 UNI/ETH**     | 2026-07-18 13:36:23 UTC       | `data/uni_eth_sushiswap_v3_03.csv`           |
+| **Uniswap V2 UNI/WETH**      | 2026-07-18 15:06:59 UTC        | `data/uni_weth_uniswap_v2_03.csv`            |
 
 ---
 
