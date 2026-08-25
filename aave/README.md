@@ -7,11 +7,11 @@ Open Price AAVE is an open-data initiative providing a standardized, continuousl
 
 | Dataset                          | End Date Available              | CSV File                                      |
 |----------------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink AAVE/USD**        | 2026-08-24 14:35:11 UTC      | `data/chainlink_aave_usd.csv`                |
-| **Uniswap V3 AAVE/USDC**     | 2026-08-24 15:17:11 UTC        | `data/aave_usdc_uniswap_v3_03.csv`           |
-| **Uniswap V3 AAVE/USDT**     | 2026-08-24 15:26:47 UTC           | `data/aave_usdt_uniswap_v3_03.csv`           |
-| **Uniswap V3 AAVE/WETH**     | 2026-08-24 15:33:23 UTC        | `data/aave_weth_uniswap_v3_03.csv`           |
-| **SushiSwap V2 AAVE/ETH**    | 2026-08-24 14:28:47 UTC       | `data/aave_eth_sushiswap_v2_03.csv`          |
+| **Chainlink AAVE/USD**        | 2026-08-25 14:51:59 UTC      | `data/chainlink_aave_usd.csv`                |
+| **Uniswap V3 AAVE/USDC**     | 2026-08-25 15:24:59 UTC        | `data/aave_usdc_uniswap_v3_03.csv`           |
+| **Uniswap V3 AAVE/USDT**     | 2026-08-25 15:35:47 UTC           | `data/aave_usdt_uniswap_v3_03.csv`           |
+| **Uniswap V3 AAVE/WETH**     | 2026-08-25 15:33:35 UTC        | `data/aave_weth_uniswap_v3_03.csv`           |
+| **SushiSwap V2 AAVE/ETH**    | 2026-08-25 15:21:47 UTC       | `data/aave_eth_sushiswap_v2_03.csv`          |
 
 ---
 
