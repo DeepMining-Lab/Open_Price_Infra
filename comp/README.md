@@ -7,12 +7,12 @@ Open Price COMP is an open-data initiative providing a standardized, continuousl
 
 | Dataset                          | End Date Available              | CSV File                                      |
 |----------------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink COMP/USD**        | 2026-09-06 14:32:47 UTC      | `data/chainlink_comp_usd.csv`                |
+| **Chainlink COMP/USD**        | 2026-09-07 15:18:47 UTC      | `data/chainlink_comp_usd.csv`                |
 | **Uniswap V3 COMP/USDC**     | 2026-02-12 21:49:11 UTC        | `data/comp_usdc_uniswap_v3_03.csv`           |
 | **Uniswap V3 COMP/USDT**     | 2021-10-06 09:21:30 UTC           | `data/comp_usdt_uniswap_v3_03.csv`           |
-| **Uniswap V3 COMP/WETH**     | 2026-09-06 15:38:47 UTC        | `data/comp_weth_uniswap_v3_03.csv`           |
-| **Uniswap V2 COMP/WETH**     | 2026-09-06 15:38:59 UTC        | `data/comp_weth_uniswap_v2_03.csv`           |
-| **SushiSwap V2 COMP/ETH**    | 2026-09-06 15:40:23 UTC       | `data/comp_eth_sushiswap_v2_03.csv`          |
+| **Uniswap V3 COMP/WETH**     | 2026-09-07 15:52:47 UTC        | `data/comp_weth_uniswap_v3_03.csv`           |
+| **Uniswap V2 COMP/WETH**     | 2026-09-07 15:57:23 UTC        | `data/comp_weth_uniswap_v2_03.csv`           |
+| **SushiSwap V2 COMP/ETH**    | 2026-09-07 15:57:47 UTC       | `data/comp_eth_sushiswap_v2_03.csv`          |
 
 ---
 
