@@ -7,8 +7,8 @@ Open Price Stablecoins is an open-data initiative providing standardized, contin
 
 | Dataset                     | End Date Available          | CSV File                          |
 |-----------------------------|-----------------------------|-----------------------------------|
-| **Chainlink USDC/USD**      | 2026-09-11 08:00:23 UTC       | `data/chainlink_usdc_usd.csv`     |
-| **Chainlink USDT/USD**      | 2026-09-10 19:34:23 UTC       | `data/chainlink_usdt_usd.csv`     |
+| **Chainlink USDC/USD**      | 2026-09-12 08:00:35 UTC       | `data/chainlink_usdc_usd.csv`     |
+| **Chainlink USDT/USD**      | 2026-09-11 19:34:59 UTC       | `data/chainlink_usdt_usd.csv`     |
 
 ---
 
