@@ -7,16 +7,26 @@ permalink: /ethereum
 page_class: ethereum-page
 ---
 
-{% raw %}
+{%- assign data = site.data.ethereum_datasets -%}
+{%- assign dataset_count = 0 -%}
+{%- assign sources = "" -%}
+{%- for asset in data.assets -%}
+  {%- assign dataset_count = dataset_count | plus: asset.datasets.size -%}
+  {%- for d in asset.datasets -%}
+    {%- assign sources = sources | append: d.source | append: "|" -%}
+  {%- endfor -%}
+{%- endfor -%}
+{%- assign source_count = sources | split: "|" | uniq | size -%}
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Dataset",
   "@id": "https://fair.deepmining.ch/ethereum#dataset",
   "name": "Open Prices — Ethereum Datasets",
-  "description": "Daily refreshed on-chain Ethereum price datasets combining Chainlink oracle feeds and Uniswap V3 swap data.",
+  "description": "Daily refreshed on-chain price datasets extracted from Ethereum Mainnet: Chainlink oracle feeds and swap events from Uniswap V2, Uniswap V3, SushiSwap V2 and SushiSwap V3 pools, for ETH, LINK, UNI, AAVE, COMP and the USDC and USDT stablecoins.",
   "url": "https://fair.deepmining.ch/ethereum",
-  "keywords": ["Ethereum", "ETH", "Chainlink", "Uniswap V3", "On-chain price", "Crypto dataset"],
+  "keywords": ["Ethereum", "ETH", "LINK", "UNI", "AAVE", "COMP", "USDC", "USDT", "Chainlink", "Uniswap V2", "Uniswap V3", "SushiSwap", "On-chain price", "Crypto dataset"],
   "license": "https://creativecommons.org/licenses/by/4.0/",
   "creator": {
     "@type": "Organization",
@@ -33,28 +43,29 @@ page_class: ethereum-page
     {
       "@type": "DataDownload",
       "name": "Folder containing all datasets on Ethereum prices",
-      "url": "https://files.deepmining.ch/files/ethereum/prices/",
+      "url": {{ data.download_url | jsonify }},
       "encodingFormat": "text/html",
-      "description": "Page containing CSV files with Ethereum prices extracted from Chainlink and Uniswap V3."
-    },
-    {
-      "@type": "DataDownload",
-      "name": "Chainlink ETH/USD CSV",
-      "contentUrl": "https://files.deepmining.ch/files/ethereum/prices/chainlink_eth_usd.csv",
-      "encodingFormat": "text/csv",
-      "description": "Historical ETH/USD prices sourced from the Chainlink oracle on Ethereum Mainnet."
-    },
-    {
-      "@type": "DataDownload",
-      "name": "Uniswap V3 ETH/USDC CSV",
-      "contentUrl": "https://files.deepmining.ch/files/ethereum/prices/eth_usdc_uniswap_v3_005.csv",
-      "encodingFormat": "text/csv",
-      "description": "Historical ETH/USDC swap data from the Uniswap V3 WETH/USDC pool on Ethereum."
+      "description": "Page containing the CSV files of prices extracted from Ethereum Mainnet."
     }
+    {%- for asset in data.assets -%}
+    {%- for d in asset.datasets -%}
+    {%- if d.source == "Chainlink" -%}
+      {%- capture d_description -%}Every price round of the Chainlink {{ d.pair }} feed on Ethereum Mainnet.{%- endcapture -%}
+    {%- else -%}
+      {%- capture d_description -%}Every swap event of the {{ d.source }} {{ d.pair }} {{ d.fee }} pool on Ethereum Mainnet.{%- endcapture -%}
+    {%- endif %},
+    {
+      "@type": "DataDownload",
+      "name": {{ d.source | append: " " | append: d.pair | append: " CSV" | jsonify }},
+      "contentUrl": {{ data.download_url | append: d.file | jsonify }},
+      "encodingFormat": "text/csv",
+      "description": {{ d_description | jsonify }}
+    }
+    {%- endfor -%}
+    {%- endfor %}
   ]
 }
 </script>
-{% endraw %}
 
 <style>
 .ethereum-page {
@@ -233,53 +244,11 @@ page_class: ethereum-page
   font-size: 0.98rem;
   text-align: center !important;
 }
-.data-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.6rem;
-}
 .dataset-grid {
   display: flex;
   justify-content: center;
   gap: 1.4rem;
   flex-wrap: wrap;
-}
-.dataset-card {
-  max-width: 360px;
-  flex: 1 1 360px;
-  color: var(--color-text-muted);
-}
-.data-card {
-  border-radius: 18px;
-  padding: 1.8rem;
-  background: var(--surface-dark-card);
-  color: var(--color-text-light);
-  box-shadow: 0 18px 40px rgba(4, 120, 87, 0.35);
-  border: 1px solid var(--color-border-dark);
-}
-.data-card h3 {
-  margin-bottom: 0.8rem;
-  font-size: 1.15rem;
-  color: var(--color-text-light);
-}
-.data-card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.data-card li {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.45rem 0;
-  border-bottom: 1px solid rgba(236, 254, 255, 0.25);
-}
-.data-card li:last-child {
-  border-bottom: none;
-}
-.data-card span {
-  font-weight: 700;
-  color: inherit;
 }
 .usecase-grid {
   display: grid;
@@ -324,10 +293,6 @@ page_class: ethereum-page
   color: #1e293b;
   margin-top: 1rem;
 }
-.dataset-reference strong {
-  color: #1e293b;
-  font-weight: 600;
-}
 .dataset-button {
   display: inline-flex;
   align-items: center;
@@ -354,8 +319,8 @@ page_class: ethereum-page
   text-decoration: none;
 }
 .dataset-card {
-  max-width: 320px;
-  flex: 1 1 320px;
+  max-width: 280px;
+  flex: 1 1 220px;
   color: var(--color-text-muted);
 }
 .dataset-logo {
@@ -426,20 +391,6 @@ page_class: ethereum-page
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #334155 !important;
 }
-.dataset-card p strong {
-  display: block;
-  color: #1e293b !important;
-  font-weight: 600;
-}
-.dataset-file-name,
-.dataset-file-name-inline {
-  font-weight: 600;
-  color: inherit;
-}
-.dataset-file-name-inline {
-  display: inline-block;
-  margin-left: 0.35rem;
-}
 .dataset-icon {
   font-size: 1.1rem;
 }
@@ -453,11 +404,10 @@ page_class: ethereum-page
   }
   .home-hero .cta-primary {
     width: 100%;
+    box-sizing: border-box;
     justify-content: center;
     text-align: center;
   }
-  .fair-card,
-  .data-card,
   .dataset-card,
   .usecase-card {
     max-width: 100%;
@@ -470,6 +420,10 @@ page_class: ethereum-page
   }
   .documentation-grid {
     grid-template-columns: 1fr;
+  }
+  .documentation-card {
+    box-sizing: border-box;
+    max-width: 100%;
   }
   .section {
     padding: 0 1.2rem;
@@ -492,52 +446,98 @@ page_class: ethereum-page
   <section class="home-hero">
     <span class="eyebrow">Ethereum datasets</span>
     <h1>Open Prices — Ethereum</h1>
-    <p class="hero-copy">The datasets below provide open, reproducible market data for research and engineering on Ethereum.</p>
-    <p class="hero-copy">The datasets are updated daily and you will always have access to the latest available version. The dataset named <span class="dataset-file-name">chainlink_eth_usd.csv</span> contains the complete price history from the Chainlink contract on Ethereum Mainnet, while the CSV <span class="dataset-file-name">eth_usdc_uniswap_v3_005.csv</span> contains all swap events recorded on the Uniswap V3 WETH/USDC contract.</p>
+    <p class="hero-copy">Every price below is read directly from Ethereum Mainnet: the rounds of Chainlink oracle feeds and the swap events of Uniswap and SushiSwap pools. Each CSV holds the complete history of its source and is updated daily.</p>
+    <ul class="hero-stats">
+      <li><strong>{{ dataset_count }}</strong><span>CSV datasets</span></li>
+      <li><strong>{{ source_count }}</strong><span>on-chain sources</span></li>
+      <li><strong>Daily</strong><span>updates</span></li>
+    </ul>
     <div class="cta-group">
-      <a class="cta-primary" href="https://files.deepmining.ch/files/ethereum/prices/" target="_blank" rel="noopener">
+      <a class="cta-primary" href="{{ data.download_url }}" target="_blank" rel="noopener">
         Download Ethereum price CSVs
       </a>
     </div>
-    <p class="hero-note">Daily-updated CSV exports of prices extracted from Chainlink and Uniswap.</p>
+    <p class="hero-note">All files sit in a single public folder, no authentication required.</p>
   </section>
 
+  <nav class="asset-nav" aria-label="Datasets by asset">
+    {%- for asset in data.assets %}
+    <a href="#{{ asset.id }}">{{ asset.name }}</a>
+    {%- endfor %}
+  </nav>
+
   <section class="section">
-    <h2>Daily refreshed price feeds</h2>
+    <h2>Where the prices come from</h2>
     <div class="daily-grid dataset-grid">
       <div class="daily-card dataset-card">
-        <h3><span class="dataset-icon" aria-hidden="true">🔷</span><span>Chainlink ETH/USD</span></h3>
-        <p>Complete history from the Chainlink price feed on Ethereum Mainnet.</p>
-        <p>Daily updates keep the dataset aligned with the latest on-chain observations.</p>
-        <p><strong>File name :</strong><span class="dataset-file-name-inline">chainlink_eth_usd.csv</span></p>
+        <h3><span class="dataset-icon" aria-hidden="true">🔷</span><span>Chainlink</span></h3>
+        <p>Oracle price feeds. One row per price round: round id, phase, answer and update time, as returned by the feed contract.</p>
       </div>
       <div class="daily-card dataset-card">
-        <h3><span class="dataset-icon" aria-hidden="true">🦄</span><span>Uniswap V3 ETH/USDC</span></h3>
-        <p>Swap events captured from the Uniswap V3 WETH/USDC pool on Ethereum.</p>
-        <p>Market microstructure preserved for volatility and slippage studies.</p>
-        <p><strong>File name :</strong><span class="dataset-file-name-inline">eth_usdc_uniswap_v3_005.csv</span></p>
+        <h3><span class="dataset-icon" aria-hidden="true">🦄</span><span>Uniswap V2 &amp; V3</span></h3>
+        <p>Liquidity pools. One row per swap event, with the swapped amounts, the resulting price and the pool liquidity at that block.</p>
+      </div>
+      <div class="daily-card dataset-card">
+        <h3><span class="dataset-icon" aria-hidden="true">🍣</span><span>SushiSwap V2 &amp; V3</span></h3>
+        <p>The same swap-level schema as Uniswap, for the SushiSwap pools that pair each asset with ETH.</p>
       </div>
     </div>
   </section>
 
   <section class="section">
-    <h2>Documentation at a glance</h2>
+    <h2>Datasets by asset</h2>
+    <p class="section-intro">DEX files are named <code>tokenA_tokenB_dex_version_fee.csv</code>, with the fee tier written without its dot (0.3% becomes <code>03</code>). Oracle files are named <code>chainlink_base_quote.csv</code>.</p>
+    {%- for asset in data.assets %}
+    <div class="asset-block" id="{{ asset.id }}">
+      <div class="asset-heading">
+        <h3>{{ asset.name }}</h3>
+        <span class="asset-label">{{ asset.label }}</span>
+        <a class="dataset-button" href="{{ data.repo_url }}/blob/main/{{ asset.readme }}" target="_blank" rel="noopener">README · column reference</a>
+      </div>
+      <table class="dataset-table">
+        <thead>
+          <tr><th scope="col">Pair</th><th scope="col">Source</th><th scope="col">Fee tier</th><th scope="col">Contract</th><th scope="col">CSV file</th></tr>
+        </thead>
+        <tbody>
+          {%- for d in asset.datasets %}
+          <tr>
+            <td data-label="Pair">
+              <strong>{{ d.pair }}</strong>
+              {%- if d.status == "inactive" %}
+              <span class="status-badge">Inactive pool</span>
+              <span class="status-note">{{ d.note }}</span>
+              {%- endif %}
+            </td>
+            <td data-label="Source">{{ d.source }}</td>
+            <td data-label="Fee tier">{{ d.fee | default: "—" }}</td>
+            <td data-label="Contract"><a href="https://etherscan.io/address/{{ d.contract }}" target="_blank" rel="noopener" title="{{ d.contract }}"><code>{{ d.contract | slice: 0, 6 }}…{{ d.contract | slice: -4, 4 }}</code></a></td>
+            <td data-label="CSV file"><a href="{{ data.download_url }}{{ d.file }}" target="_blank" rel="noopener"><code>{{ d.file }}</code></a></td>
+          </tr>
+          {%- endfor %}
+        </tbody>
+      </table>
+    </div>
+    {%- endfor %}
+  </section>
+
+  <section class="section">
+    <h2>Provenance in every row</h2>
     <div class="documentation-grid">
       <div class="documentation-card">
-        <h3><span class="emoji" aria-hidden="true">📁</span>Folder structure</h3>
-        <p>Structured folder hierarchy and descriptive metadata inside each CSV make discovery and filtering straightforward.</p>
+        <h3><span class="emoji" aria-hidden="true">🧾</span>Extraction fingerprint</h3>
+        <p>Each row carries its extraction run id, the schema version and the SHA-256 hashes of the extraction script and of the contract ABI used.</p>
       </div>
       <div class="documentation-card">
-        <h3><span class="emoji" aria-hidden="true">📅</span>Coverage</h3>
-        <p>Available date ranges for which price data is provided are clearly stated so you know the historical span.</p>
+        <h3><span class="emoji" aria-hidden="true">⛓️</span>Node &amp; block anchoring</h3>
+        <p>The RPC client and version, the chain id and the node head block at extraction time are recorded, plus the block hash and transaction index of every swap.</p>
       </div>
       <div class="documentation-card">
-        <h3><span class="emoji" aria-hidden="true">⚙️</span>Extraction</h3>
-        <p>Extraction methods and on-chain data sources, including Chainlink and Uniswap V3, are documented for full transparency.</p>
+        <h3><span class="emoji" aria-hidden="true">💧</span>Liquidity context</h3>
+        <p>DEX rows include the pool TVL at the swap block and the simulated slippage of a 1k and a 10k swap, to judge how representative each price is.</p>
       </div>
       <div class="documentation-card">
-        <h3><span class="emoji" aria-hidden="true">🔤</span>Naming</h3>
-        <p>File structure and naming conventions are explained to streamline notebook loading and pipeline integration.</p>
+        <h3><span class="emoji" aria-hidden="true">🚩</span>Quality flags</h3>
+        <p>Swaps are flagged <code>low_liquidity</code>, <code>zero_amount</code> or <code>extreme_slippage</code>. Chainlink rounds carry an answer status such as <code>answered_in_old_round</code>.</p>
       </div>
     </div>
   </section>
@@ -546,16 +546,18 @@ page_class: ethereum-page
     <h2>Resources</h2>
     <div class="usecase-grid">
       <div class="usecase-card">
-        <h3>Dataset reference</h3>
-        <p>The repository README catalogues the dataset reference for Ethereum price files.</p>
+        <h3>Extraction code</h3>
+        <p>The Python extraction scripts, the Docker setup and the README of every asset, with the full column reference and the latest date available per file.</p>
         <div class="dataset-reference">
-          <strong>Dataset reference:</strong>
-          <a class="dataset-button" href="https://github.com/DeepMining-Lab/Open_Price_Infra/blob/main/eth/README.md" target="_blank" rel="noopener">README.md</a>
+          <a class="dataset-button" href="{{ data.repo_url }}" target="_blank" rel="noopener">Open_Price_Infra on GitHub</a>
         </div>
       </div>
       <div class="usecase-card">
-        <h3>More datasets coming</h3>
-        <p>More datasets are coming soon (e.g., Uniswap V2).</p>
+        <h3>Query prices through the API</h3>
+        <p>The OpenPrice API reads these CSV files and returns the price of an asset at any timestamp, with its source, a confidence score and its full provenance.</p>
+        <div class="dataset-reference">
+          <a class="dataset-button" href="{{ data.api_url }}" target="_blank" rel="noopener">openprice-api on GitHub</a>
+        </div>
       </div>
     </div>
   </section>

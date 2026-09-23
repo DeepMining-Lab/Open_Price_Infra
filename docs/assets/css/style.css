@@ -605,3 +605,385 @@ body.gnosis-page .readme-info__placeholder {
   color: #9cd7d3;
   font-style: italic;
 }
+
+/* Code inline sur fond sombre (pages Accueil et Ethereum)
+ * ----------------------------------------------
+ */
+.home-page .section-intro code,
+.home-page .documentation-card code,
+.home-page .dataset-table code,
+.home-page .api-panel code {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85em;
+  color: #99f6e4;
+  background-color: rgba(45, 212, 191, 0.12);
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+/* Styles spécifiques pour la page Ethereum */
+body.ethereum-page .hero-stats {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  padding: 0;
+  margin: 2rem auto 0;
+}
+body.ethereum-page .hero-stats li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 130px;
+  padding: 0.7rem 1.2rem;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.08);
+  border: 1px solid rgba(236, 254, 255, 0.18);
+}
+body.ethereum-page .hero-stats strong {
+  font-size: 1.6rem;
+  color: #f8fafc;
+}
+body.ethereum-page .hero-stats span {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(236, 254, 255, 0.78);
+}
+
+/* Navigation par asset (ancres vers chaque section) */
+body.ethereum-page .asset-nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  max-width: 1100px;
+  margin: -1.5rem auto 4rem;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+body.ethereum-page .asset-nav a {
+  font-family: 'Space Mono', monospace;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  background: rgba(45, 212, 191, 0.08);
+  color: #ccfbf1;
+  text-decoration: none;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+body.ethereum-page .asset-nav a:hover,
+body.ethereum-page .asset-nav a:focus-visible {
+  background: rgba(45, 212, 191, 0.24);
+  transform: translateY(-1px);
+}
+
+body.ethereum-page .section-intro {
+  max-width: 760px;
+  margin: -1rem auto 2.5rem;
+  text-align: center;
+  line-height: 1.6;
+  color: rgba(236, 254, 255, 0.84);
+}
+
+/* Un bloc par asset : titre, lien README et tableau des datasets */
+body.ethereum-page .asset-block {
+  margin-bottom: 3rem;
+  scroll-margin-top: 1.5rem;
+}
+body.ethereum-page .asset-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  padding-bottom: 0.7rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.35);
+}
+body.ethereum-page .asset-heading h3 {
+  display: block;
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  color: #f8fafc;
+}
+body.ethereum-page .asset-label {
+  font-size: 0.95rem;
+  color: rgba(236, 254, 255, 0.7);
+}
+body.ethereum-page .asset-heading .dataset-button {
+  margin-left: auto;
+  background: rgba(45, 212, 191, 0.12);
+  border-color: rgba(45, 212, 191, 0.45);
+  color: #ccfbf1 !important;
+  box-shadow: none;
+}
+
+body.ethereum-page .dataset-table {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: left;
+  color: #e2e8f0;
+}
+/* Mêmes largeurs de colonnes pour tous les assets */
+body.ethereum-page .dataset-table th:nth-child(1) { width: 22%; }
+body.ethereum-page .dataset-table th:nth-child(2) { width: 15%; }
+body.ethereum-page .dataset-table th:nth-child(3) { width: 10%; }
+body.ethereum-page .dataset-table th:nth-child(4) { width: 17%; }
+body.ethereum-page .dataset-table th:nth-child(5) { width: 36%; }
+body.ethereum-page .dataset-table tr,
+body.ethereum-page .dataset-table tr:nth-child(even) {
+  background: transparent;
+}
+body.ethereum-page .dataset-table th {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(236, 254, 255, 0.2);
+  padding: 0.6rem 0.8rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5eead4;
+}
+body.ethereum-page .dataset-table td {
+  border: 0;
+  border-bottom: 1px solid rgba(236, 254, 255, 0.1);
+  padding: 0.7rem 0.8rem;
+  vertical-align: top;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+}
+body.ethereum-page .dataset-table td strong {
+  font-size: 0.95rem;
+  color: #f8fafc;
+}
+body.ethereum-page .dataset-table a {
+  color: #99f6e4;
+  text-decoration: none;
+}
+body.ethereum-page .dataset-table a:hover code,
+body.ethereum-page .dataset-table a:focus-visible code {
+  background-color: rgba(45, 212, 191, 0.28);
+}
+body.ethereum-page .status-badge {
+  display: inline-block;
+  margin: 0.35rem 0 0;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.14);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+body.ethereum-page .status-note {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: rgba(253, 230, 138, 0.8);
+}
+
+/* Boutons des cartes claires de la section Resources */
+body.ethereum-page .usecase-card .dataset-button {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #ecfeff !important;
+  text-decoration: none;
+}
+
+/* Sur mobile, chaque ligne du tableau devient une carte */
+@media (max-width: 720px) {
+  body.ethereum-page .asset-heading .dataset-button {
+    margin-left: 0;
+  }
+  body.ethereum-page .dataset-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  body.ethereum-page .dataset-table,
+  body.ethereum-page .dataset-table tbody,
+  body.ethereum-page .dataset-table tr,
+  body.ethereum-page .dataset-table td {
+    display: block;
+  }
+  body.ethereum-page .dataset-table tr {
+    margin-top: 0.8rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 14px;
+    border: 1px solid rgba(45, 212, 191, 0.25);
+    background: rgba(248, 250, 252, 0.04);
+  }
+  body.ethereum-page .dataset-table td {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.2rem 0.8rem;
+    padding: 0.3rem 0;
+    border-bottom: 0;
+  }
+  /* La paire sert de titre de carte */
+  body.ethereum-page .dataset-table td[data-label="Pair"] {
+    display: block;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
+    border-bottom: 1px solid rgba(236, 254, 255, 0.1);
+  }
+  body.ethereum-page .dataset-table td[data-label="Pair"]::before {
+    content: none;
+  }
+  body.ethereum-page .dataset-table .status-badge {
+    margin-left: 0.5rem;
+  }
+  body.ethereum-page .dataset-table td::before {
+    content: attr(data-label);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #5eead4;
+  }
+  body.ethereum-page .dataset-table code {
+    word-break: break-all;
+  }
+}
+
+/* Page d'accueil : bouton secondaire, liens par asset et section API */
+.home-page .home-hero .cta-group {
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.home-page .home-hero .cta-secondary {
+  border-radius: 999px;
+  padding: 0.85rem 1.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #ecfeff;
+  border: 1px solid rgba(236, 254, 255, 0.55);
+  background: rgba(248, 250, 252, 0.06);
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+.home-page .home-hero .cta-secondary:hover {
+  transform: translateY(-2px);
+  background: rgba(248, 250, 252, 0.16);
+}
+
+.home-page .asset-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.8rem;
+}
+.home-page .asset-links span {
+  text-align: center;
+  color: rgba(236, 254, 255, 0.78);
+}
+.home-page .asset-links a {
+  font-family: 'Space Mono', monospace;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  background: rgba(45, 212, 191, 0.08);
+  color: #ccfbf1;
+  text-decoration: none;
+}
+.home-page .asset-links a:hover {
+  background: rgba(45, 212, 191, 0.24);
+}
+
+.home-page .api-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: center;
+  border-radius: 22px;
+  padding: 2.2rem;
+  background:
+    radial-gradient(900px circle at 15% 15%, rgba(74, 222, 128, 0.45), transparent 55%),
+    radial-gradient(900px circle at 85% -10%, rgba(45, 212, 191, 0.42), transparent 50%),
+    linear-gradient(135deg, #022c22, #064e3b 55%, #0f172a);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  box-shadow: 0 18px 40px rgba(4, 120, 87, 0.35);
+}
+.home-page .api-panel p {
+  text-align: left;
+  line-height: 1.6;
+  color: rgba(236, 254, 255, 0.88);
+  margin: 0 0 1rem;
+}
+.home-page .api-panel ul {
+  margin: 0 0 1.6rem;
+  padding: 0;
+  list-style: none;
+}
+.home-page .api-panel li {
+  position: relative;
+  padding: 0.35rem 0 0.35rem 1.6rem;
+  line-height: 1.5;
+  color: #ecfeff;
+}
+.home-page .api-panel li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #4ade80;
+  font-weight: 700;
+}
+.home-page .api-panel pre {
+  margin: 0 0 0.8rem;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  background-color: rgba(2, 16, 9, 0.7);
+}
+.home-page .api-panel pre code {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  white-space: pre;
+  color: #ccfbf1;
+}
+.home-page .api-panel .api-code-caption {
+  font-size: 0.85rem;
+  color: rgba(236, 254, 255, 0.72);
+  margin: 0;
+}
+.home-page .api-panel .cta-primary {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.75rem 1.6rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  color: #022c22;
+  box-shadow: 0 12px 30px rgba(34, 211, 238, 0.3);
+  transition: transform 0.18s ease;
+}
+.home-page .api-panel .cta-primary:hover {
+  transform: translateY(-2px);
+}
+@media (max-width: 720px) {
+  .home-page .api-panel {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1.6rem 1.2rem;
+  }
+}

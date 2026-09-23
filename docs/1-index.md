@@ -226,6 +226,11 @@ logo_img: /assets/img/faironchain-white.png
 }
 </style>
 
+{%- assign dataset_count = 0 -%}
+{%- for asset in site.data.ethereum_datasets.assets -%}
+  {%- assign dataset_count = dataset_count | plus: asset.datasets.size -%}
+{%- endfor %}
+
 <div class="home-page">
   <section class="home-hero">
     <span class="eyebrow">Open data, On-chain trust</span>
@@ -237,6 +242,7 @@ logo_img: /assets/img/faironchain-white.png
     </p>
     <div class="cta-group">
       <a class="cta-primary" href="https://github.com/DeepMining-Lab/Open_Price_Infra" target="_blank" rel="noopener">Explore the GitHub repository</a>
+      <a class="cta-secondary" href="/ethereum">Browse the datasets</a>
     </div>
   </section>
 
@@ -268,18 +274,46 @@ logo_img: /assets/img/faironchain-white.png
       <div class="data-card">
         <h3>Oracle feeds</h3>
         <ul>
-          <li><span>Chainlink</span> price references for major assets</li>
-          <li>Block-level snapshots with precise update cadence</li>
+          <li><span>Chainlink</span> feeds for ETH, LINK, UNI, AAVE, COMP, USDC and USDT</li>
+          <li>Every price round with its phase, round id and update time</li>
           <li>Historical backfill ready for statistical modeling</li>
         </ul>
       </div>
       <div class="data-card">
         <h3>DEX liquidity pools</h3>
         <ul>
-          <li><span>Uniswap V3</span> ticks, liquidity, and swap-aware prices</li>
-          <li>Covers the Ethereum blockchain and others to come</li>
+          <li><span>Uniswap &amp; SushiSwap</span> V2 and V3 swap events</li>
+          <li>Pool TVL, simulated slippage and quality flags at every swap</li>
           <li>Supports market microstructure and slippage studies</li>
         </ul>
+      </div>
+    </div>
+    <div class="asset-links">
+      <span>{{ dataset_count }} datasets on Ethereum, updated daily:</span>
+      {%- for asset in site.data.ethereum_datasets.assets %}
+      <a href="/ethereum#{{ asset.id }}">{{ asset.name }}</a>
+      {%- endfor %}
+    </div>
+  </section>
+
+  <section class="section" id="api">
+    <h2>Query prices directly</h2>
+    <div class="api-panel">
+      <div>
+        <p>The <strong>OpenPrice API</strong> is an open-source service that reads these CSV files as they are, with no import step, and answers one question: what was the price of an asset at time T, and where does it come from?</p>
+        <ul>
+          <li>Price at any timestamp, raw or as a volume-weighted median per minute, hour or day</li>
+          <li>Explicit source hierarchy: Uniswap V3 pools first, then Uniswap V2 and SushiSwap, with Chainlink as a fallback</li>
+          <li>A confidence score and the full provenance of every price</li>
+          <li>No invented values: the price is <code>null</code> when no reliable source exists</li>
+        </ul>
+        <a class="cta-primary" href="{{ site.data.ethereum_datasets.api_url }}" target="_blank" rel="noopener">Explore the API repository</a>
+      </div>
+      <div>
+        <pre><code>GET /v3/prices/LINK/at
+    ?timestamp=2024-01-01T00:00:00Z
+    &amp;granularity=hour</code></pre>
+        <p class="api-code-caption">Supported assets: ETH, LINK, UNI, AAVE and COMP. The API is self-hosted: clone the repository, point it at the downloaded CSV files and start it.</p>
       </div>
     </div>
   </section>

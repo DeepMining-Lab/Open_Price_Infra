@@ -2,7 +2,7 @@ title: "Open prices"
 author: "DeepMining Lab"
 description: "Open-data initiative providing a standardized, continuously updated historical dataset of prices"
 baseurl: "" 
-url: "http://localhost:4000"
+url: "https://fair.deepmining.ch"
 
 markdown: kramdown
 highlighter: rouge
