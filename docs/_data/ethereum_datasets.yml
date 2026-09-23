@@ -8,6 +8,10 @@
 # Not listed on purpose: crvusd_weth_curve.csv (Curve crvUSD/WETH), whose
 # extraction currently produces an empty file.
 #
+# `since` is the UTC date of the first row of each CSV (the files are sorted by
+# date; checked on 2026-09-23). It feeds the "Since" column and the JSON-LD
+# temporalCoverage.
+#
 # `status: inactive` flags pools with no recent swaps; `note` states the last
 # observed swap (checked on 2026-09-23).
 
@@ -21,63 +25,63 @@ assets:
     label: Ether
     readme: eth/README.md
     datasets:
-      - { file: chainlink_eth_usd.csv,          pair: ETH/USD,   source: Chainlink,    contract: "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419" }
-      - { file: eth_usdc_uniswap_v3_005.csv,    pair: ETH/USDC,  source: Uniswap V3,   fee: 0.05%, contract: "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640" }
-      - { file: weth_usdc_uniswap_v2_03.csv,    pair: WETH/USDC, source: Uniswap V2,   fee: 0.3%,  contract: "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc" }
-      - { file: weth_usdt_uniswap_v2_03.csv,    pair: WETH/USDT, source: Uniswap V2,   fee: 0.3%,  contract: "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852" }
+      - { file: chainlink_eth_usd.csv,          pair: ETH/USD,   source: Chainlink,                since: "2020-08-06", contract: "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419" }
+      - { file: eth_usdc_uniswap_v3_005.csv,    pair: ETH/USDC,  source: Uniswap V3,   fee: 0.05%, since: "2021-05-05", contract: "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640" }
+      - { file: weth_usdc_uniswap_v2_03.csv,    pair: WETH/USDC, source: Uniswap V2,   fee: 0.3%,  since: "2020-05-05", contract: "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc" }
+      - { file: weth_usdt_uniswap_v2_03.csv,    pair: WETH/USDT, source: Uniswap V2,   fee: 0.3%,  since: "2020-05-19", contract: "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852" }
 
   - id: link
     name: LINK
     label: Chainlink
     readme: link/README.md
     datasets:
-      - { file: chainlink_link_usd.csv,         pair: LINK/USD,  source: Chainlink,    contract: "0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c" }
-      - { file: link_usdc_uniswap_v3_03.csv,    pair: LINK/USDC, source: Uniswap V3,   fee: 0.3%,  contract: "0xFAD57d2039C21811C8F2B5D5B65308aa99D31559" }
-      - { file: link_usdt_uniswap_v3_03.csv,    pair: LINK/USDT, source: Uniswap V3,   fee: 0.3%,  contract: "0xac5A2c404EbBa22A869998089Ac7893fF4E1F0A7" }
-      - { file: link_weth_uniswap_v3_03.csv,    pair: LINK/WETH, source: Uniswap V3,   fee: 0.3%,  contract: "0xa6CC3C2531Fdaa6Ae1A3CA84c2855806728693e8" }
-      - { file: link_weth_uniswap_v2_03.csv,    pair: LINK/WETH, source: Uniswap V2,   fee: 0.3%,  contract: "0xa2107fa5b38d9bbd2c461d6edf11b11a50f6b974" }
-      - { file: link_eth_sushiswap_v2_03.csv,   pair: LINK/ETH,  source: SushiSwap V2, fee: 0.3%,  contract: "0xc40d16476380e4037e6b1a2594caf6a6cc8da967" }
-      - { file: link_eth_sushiswap_v3_03.csv,   pair: LINK/ETH,  source: SushiSwap V3, fee: 0.3%,  contract: "0xA5F43B0EBaEfbEd5B1f1bFc809AF15254EA1e9c4" }
+      - { file: chainlink_link_usd.csv,         pair: LINK/USD,  source: Chainlink,                since: "2021-03-12", contract: "0x2c1d072e956AFFC0D435Cb7AC38EF18d24d9127c" }
+      - { file: link_usdc_uniswap_v3_03.csv,    pair: LINK/USDC, source: Uniswap V3,   fee: 0.3%,  since: "2021-05-09", contract: "0xFAD57d2039C21811C8F2B5D5B65308aa99D31559" }
+      - { file: link_usdt_uniswap_v3_03.csv,    pair: LINK/USDT, source: Uniswap V3,   fee: 0.3%,  since: "2021-05-27", contract: "0xac5A2c404EbBa22A869998089Ac7893fF4E1F0A7" }
+      - { file: link_weth_uniswap_v3_03.csv,    pair: LINK/WETH, source: Uniswap V3,   fee: 0.3%,  since: "2021-05-05", contract: "0xa6CC3C2531Fdaa6Ae1A3CA84c2855806728693e8" }
+      - { file: link_weth_uniswap_v2_03.csv,    pair: LINK/WETH, source: Uniswap V2,   fee: 0.3%,  since: "2020-05-18", contract: "0xa2107fa5b38d9bbd2c461d6edf11b11a50f6b974" }
+      - { file: link_eth_sushiswap_v2_03.csv,   pair: LINK/ETH,  source: SushiSwap V2, fee: 0.3%,  since: "2020-09-09", contract: "0xc40d16476380e4037e6b1a2594caf6a6cc8da967" }
+      - { file: link_eth_sushiswap_v3_03.csv,   pair: LINK/ETH,  source: SushiSwap V3, fee: 0.3%,  since: "2023-07-17", contract: "0xA5F43B0EBaEfbEd5B1f1bFc809AF15254EA1e9c4" }
 
   - id: uni
     name: UNI
     label: Uniswap
     readme: uni/README.md
     datasets:
-      - { file: chainlink_uni_usd.csv,          pair: UNI/USD,   source: Chainlink,    contract: "0x553303d460EE0afB37EdFf9bE42922D8FF63220e" }
-      - { file: uni_usdc_uniswap_v3_03.csv,     pair: UNI/USDC,  source: Uniswap V3,   fee: 0.3%,  contract: "0xD0fC8bA7E267f2bc56044A7715A489d851dC6D78" }
-      - { file: uni_usdt_uniswap_v3_03.csv,     pair: UNI/USDT,  source: Uniswap V3,   fee: 0.3%,  contract: "0x3470447f3cECFfaC709D3E783A307790B0208d60" }
-      - { file: uni_weth_uniswap_v3_03.csv,     pair: UNI/WETH,  source: Uniswap V3,   fee: 0.3%,  contract: "0x1d42064FC4BeB5f8Aaf85F4617AE8b3B5B8BD801" }
-      - { file: uni_weth_uniswap_v2_03.csv,     pair: UNI/WETH,  source: Uniswap V2,   fee: 0.3%,  contract: "0xd3d2e2692501a5c9ca623199d38826e513033a17" }
-      - { file: uni_eth_sushiswap_v3_03.csv,    pair: UNI/ETH,   source: SushiSwap V3, fee: 0.3%,  contract: "0xEd35BD3D709CB50f34113A4962607B2A0F93cD92" }
+      - { file: chainlink_uni_usd.csv,          pair: UNI/USD,   source: Chainlink,                since: "2020-11-24", contract: "0x553303d460EE0afB37EdFf9bE42922D8FF63220e" }
+      - { file: uni_usdc_uniswap_v3_03.csv,     pair: UNI/USDC,  source: Uniswap V3,   fee: 0.3%,  since: "2021-05-06", contract: "0xD0fC8bA7E267f2bc56044A7715A489d851dC6D78" }
+      - { file: uni_usdt_uniswap_v3_03.csv,     pair: UNI/USDT,  source: Uniswap V3,   fee: 0.3%,  since: "2021-05-06", contract: "0x3470447f3cECFfaC709D3E783A307790B0208d60" }
+      - { file: uni_weth_uniswap_v3_03.csv,     pair: UNI/WETH,  source: Uniswap V3,   fee: 0.3%,  since: "2021-05-05", contract: "0x1d42064FC4BeB5f8Aaf85F4617AE8b3B5B8BD801" }
+      - { file: uni_weth_uniswap_v2_03.csv,     pair: UNI/WETH,  source: Uniswap V2,   fee: 0.3%,  since: "2020-09-17", contract: "0xd3d2e2692501a5c9ca623199d38826e513033a17" }
+      - { file: uni_eth_sushiswap_v3_03.csv,    pair: UNI/ETH,   source: SushiSwap V3, fee: 0.3%,  since: "2026-04-13", contract: "0xEd35BD3D709CB50f34113A4962607B2A0F93cD92" }
 
   - id: aave
     name: AAVE
     label: Aave
     readme: aave/README.md
     datasets:
-      - { file: chainlink_aave_usd.csv,         pair: AAVE/USD,  source: Chainlink,    contract: "0x547a514d5e3769680Ce22B2361c10Ea13619e8a9" }
-      - { file: aave_usdc_uniswap_v3_03.csv,    pair: AAVE/USDC, source: Uniswap V3,   fee: 0.3%,  contract: "0xdceaf5d0E5E0dB9596A47C0c4120654e80B1d706" }
-      - { file: aave_usdt_uniswap_v3_03.csv,    pair: AAVE/USDT, source: Uniswap V3,   fee: 0.3%,  contract: "0x4d1AD4a9E61BC0E5529d64f38199cCFca56F5A42" }
-      - { file: aave_weth_uniswap_v3_03.csv,    pair: AAVE/WETH, source: Uniswap V3,   fee: 0.3%,  contract: "0x5ab53EE1d50eeF2C1DD3D5402789cd27bB52c1bB" }
-      - { file: aave_eth_sushiswap_v2_03.csv,   pair: AAVE/ETH,  source: SushiSwap V2, fee: 0.3%,  contract: "0xd75ea151a61d06868e31f8988d28dfe5e9df57b4" }
+      - { file: chainlink_aave_usd.csv,         pair: AAVE/USD,  source: Chainlink,                since: "2021-03-03", contract: "0x547a514d5e3769680Ce22B2361c10Ea13619e8a9" }
+      - { file: aave_usdc_uniswap_v3_03.csv,    pair: AAVE/USDC, source: Uniswap V3,   fee: 0.3%,  since: "2021-05-05", contract: "0xdceaf5d0E5E0dB9596A47C0c4120654e80B1d706" }
+      - { file: aave_usdt_uniswap_v3_03.csv,    pair: AAVE/USDT, source: Uniswap V3,   fee: 0.3%,  since: "2021-05-07", contract: "0x4d1AD4a9E61BC0E5529d64f38199cCFca56F5A42" }
+      - { file: aave_weth_uniswap_v3_03.csv,    pair: AAVE/WETH, source: Uniswap V3,   fee: 0.3%,  since: "2021-05-06", contract: "0x5ab53EE1d50eeF2C1DD3D5402789cd27bB52c1bB" }
+      - { file: aave_eth_sushiswap_v2_03.csv,   pair: AAVE/ETH,  source: SushiSwap V2, fee: 0.3%,  since: "2020-10-03", contract: "0xd75ea151a61d06868e31f8988d28dfe5e9df57b4" }
 
   - id: comp
     name: COMP
     label: Compound
     readme: comp/README.md
     datasets:
-      - { file: chainlink_comp_usd.csv,         pair: COMP/USD,  source: Chainlink,    contract: "0xdbd020CAeF83eFd542f4De03e3cF0C28A4428bd5" }
-      - { file: comp_usdc_uniswap_v3_03.csv,    pair: COMP/USDC, source: Uniswap V3,   fee: 0.3%,  contract: "0xF15054BC50c39ad15FDC67f2AedD7c2c945ca5f6", status: inactive, note: "Last swap on 2026-02-12" }
-      - { file: comp_usdt_uniswap_v3_03.csv,    pair: COMP/USDT, source: Uniswap V3,   fee: 0.3%,  contract: "0x68c5ea31aefe12713642aec96999df9319942641", status: inactive, note: "Last swap on 2021-10-06" }
-      - { file: comp_weth_uniswap_v3_03.csv,    pair: COMP/WETH, source: Uniswap V3,   fee: 0.3%,  contract: "0xea4ba4ce14fdd287f380b55419b1c5b6c3f22ab6" }
-      - { file: comp_weth_uniswap_v2_03.csv,    pair: COMP/WETH, source: Uniswap V2,   fee: 0.3%,  contract: "0xCFfDdeD873554F362Ac02f8Fb1f02E5ada10516f" }
-      - { file: comp_eth_sushiswap_v2_03.csv,   pair: COMP/ETH,  source: SushiSwap V2, fee: 0.3%,  contract: "0x31503dcb60119a812fee820bb7042752019f2355" }
+      - { file: chainlink_comp_usd.csv,         pair: COMP/USD,  source: Chainlink,                since: "2020-09-29", contract: "0xdbd020CAeF83eFd542f4De03e3cF0C28A4428bd5" }
+      - { file: comp_usdc_uniswap_v3_03.csv,    pair: COMP/USDC, source: Uniswap V3,   fee: 0.3%,  since: "2021-05-05", contract: "0xF15054BC50c39ad15FDC67f2AedD7c2c945ca5f6", status: inactive, note: "Last swap on 2026-02-12" }
+      - { file: comp_usdt_uniswap_v3_03.csv,    pair: COMP/USDT, source: Uniswap V3,   fee: 0.3%,  since: "2021-07-08", contract: "0x68c5ea31aefe12713642aec96999df9319942641", status: inactive, note: "Last swap on 2021-10-06" }
+      - { file: comp_weth_uniswap_v3_03.csv,    pair: COMP/WETH, source: Uniswap V3,   fee: 0.3%,  since: "2021-05-05", contract: "0xea4ba4ce14fdd287f380b55419b1c5b6c3f22ab6" }
+      - { file: comp_weth_uniswap_v2_03.csv,    pair: COMP/WETH, source: Uniswap V2,   fee: 0.3%,  since: "2020-06-15", contract: "0xCFfDdeD873554F362Ac02f8Fb1f02E5ada10516f" }
+      - { file: comp_eth_sushiswap_v2_03.csv,   pair: COMP/ETH,  source: SushiSwap V2, fee: 0.3%,  since: "2020-09-09", contract: "0x31503dcb60119a812fee820bb7042752019f2355" }
 
   - id: stablecoins
     name: Stablecoins
     label: USDC and USDT
     readme: stablecoins/README.md
     datasets:
-      - { file: chainlink_usdc_usd.csv,         pair: USDC/USD,  source: Chainlink,    contract: "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6" }
-      - { file: chainlink_usdt_usd.csv,         pair: USDT/USD,  source: Chainlink,    contract: "0x3E7d1eAB13ad0104d2750B8863b489D65364e32D" }
+      - { file: chainlink_usdc_usd.csv,         pair: USDC/USD,  source: Chainlink,                since: "2021-02-17", contract: "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6" }
+      - { file: chainlink_usdt_usd.csv,         pair: USDT/USD,  source: Chainlink,                since: "2021-02-17", contract: "0x3E7d1eAB13ad0104d2750B8863b489D65364e32D" }

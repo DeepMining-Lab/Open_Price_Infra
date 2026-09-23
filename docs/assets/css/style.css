@@ -733,11 +733,12 @@ body.ethereum-page .dataset-table {
   color: #e2e8f0;
 }
 /* Mêmes largeurs de colonnes pour tous les assets */
-body.ethereum-page .dataset-table th:nth-child(1) { width: 22%; }
-body.ethereum-page .dataset-table th:nth-child(2) { width: 15%; }
-body.ethereum-page .dataset-table th:nth-child(3) { width: 10%; }
-body.ethereum-page .dataset-table th:nth-child(4) { width: 17%; }
-body.ethereum-page .dataset-table th:nth-child(5) { width: 36%; }
+body.ethereum-page .dataset-table th:nth-child(1) { width: 13%; }
+body.ethereum-page .dataset-table th:nth-child(2) { width: 14%; }
+body.ethereum-page .dataset-table th:nth-child(3) { width: 9%; }
+body.ethereum-page .dataset-table th:nth-child(4) { width: 12%; }
+body.ethereum-page .dataset-table th:nth-child(5) { width: 16%; }
+body.ethereum-page .dataset-table th:nth-child(6) { width: 36%; }
 body.ethereum-page .dataset-table tr,
 body.ethereum-page .dataset-table tr:nth-child(even) {
   background: transparent;
@@ -768,6 +769,15 @@ body.ethereum-page .dataset-table td strong {
 body.ethereum-page .dataset-table a {
   color: #99f6e4;
   text-decoration: none;
+}
+/* Noms de fichiers et adresses : un peu plus petits pour tenir sur une ligne ;
+   sur les largeurs intermédiaires ils passent à la ligne (après un _) au lieu de déborder */
+body.ethereum-page .dataset-table code {
+  font-size: 0.8em;
+  overflow-wrap: anywhere;
+}
+body.ethereum-page .dataset-table td[data-label="Since"] {
+  white-space: nowrap;
 }
 body.ethereum-page .dataset-table a:hover code,
 body.ethereum-page .dataset-table a:focus-visible code {
@@ -877,6 +887,20 @@ body.ethereum-page .usecase-card .dataset-button {
 .home-page .home-hero .cta-secondary:hover {
   transform: translateY(-2px);
   background: rgba(248, 250, 252, 0.16);
+}
+/* Lien FairOnChain du paragraphe d'introduction, même style que la carte de bas de page */
+.home-page .home-hero p a,
+.home-page .home-hero p a:link,
+.home-page .home-hero p a:visited {
+  color: #ecfeff !important;
+  font-family: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(236, 254, 255, 0.5);
+}
+.home-page .home-hero p a:hover {
+  background: none;
+  border-bottom-color: rgba(236, 254, 255, 0.9);
 }
 
 .home-page .asset-links {

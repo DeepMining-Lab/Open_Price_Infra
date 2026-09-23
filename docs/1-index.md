@@ -236,6 +236,7 @@ logo_img: /assets/img/faironchain-white.png
     <span class="eyebrow">Open data, On-chain trust</span>
     <h1>Continuously updated, research-grade crypto price history</h1>
     <p>
+      Part of the <a href="https://www.faironchain.org" target="_blank" rel="noopener">FairOnChain</a> project,
       Open Price brings together on-chain oracle and DEX pool observations into a unified, transparent archive.
       The dataset is standardized, reproducible, and fully aligned with the
       <strong>FAIR</strong> principles so researchers and builders can move from question to insight without friction.
@@ -251,7 +252,7 @@ logo_img: /assets/img/faironchain-white.png
     <div class="fair-grid">
       <div class="fair-card">
         <h3>🔍 Findable</h3>
-        <p>Structured folder hierarchy and descriptive metadata inside each CSV make discovery and filtering straightforward.</p>
+        <p>Predictable file names, a README per asset and schema.org metadata that dataset search engines can index.</p>
       </div>
       <div class="fair-card">
         <h3>🌐 Accessible</h3>
@@ -259,11 +260,11 @@ logo_img: /assets/img/faironchain-white.png
       </div>
       <div class="fair-card">
         <h3>🧩 Interoperable</h3>
-        <p>Uniform schemas, consistent timestamping, and shared data dictionaries ensure cross-chain comparability out of the box.</p>
+        <p>Plain CSV files readable by any tool, UTC timestamps and a documented column reference for every file.</p>
       </div>
       <div class="fair-card">
         <h3>♻️ Reusable</h3>
-        <p>Detailed provenance, extraction scripts, and versioned releases document every assumption for reproducible research.</p>
+        <p>Per-row provenance, open-source extraction scripts and a CC BY 4.0 license make every file reusable and verifiable.</p>
       </div>
     </div>
   </section>
@@ -319,19 +320,19 @@ logo_img: /assets/img/faironchain-white.png
   </section>
 
   <section class="section">
-    <h2>Built for teams shipping faster</h2>
+    <h2>Designed for reproducible research</h2>
     <div class="usecase-grid">
       <div class="usecase-card">
-        <h3>Quant & DeFi research</h3>
-        <p>Load clean historical curves into notebooks or pipelines to calibrate strategies, explore volatility, and stress-test assumptions.</p>
+        <h3>Market microstructure &amp; DeFi research</h3>
+        <p>Study price formation, liquidity and slippage on the complete swap and oracle history, using the quality flags to set aside unrepresentative trades.</p>
       </div>
       <div class="usecase-card">
-        <h3>Data products & dashboards</h3>
-        <p>Power interactive visualizations and monitoring tools with harmonized feeds that stay in sync as new blocks arrive.</p>
+        <h3>Historical price verification</h3>
+        <p>Establish the price of an asset at a given time and trace it back on-chain: the block and transaction of each swap, the round and aggregator contract of each oracle update.</p>
       </div>
       <div class="usecase-card">
-        <h3>Academic collaborations</h3>
-        <p>Transparent sourcing and documented methodology enable peer review, replication, and cross-institutional knowledge sharing.</p>
+        <h3>Replication &amp; peer review</h3>
+        <p>The open extraction scripts and the per-row provenance (run id, script hash, node, block) let other researchers re-run an extraction and compare it with the published file.</p>
       </div>
     </div>
   </section>

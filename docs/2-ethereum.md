@@ -10,13 +10,16 @@ page_class: ethereum-page
 {%- assign data = site.data.ethereum_datasets -%}
 {%- assign dataset_count = 0 -%}
 {%- assign sources = "" -%}
+{%- assign since_dates = "" -%}
 {%- for asset in data.assets -%}
   {%- assign dataset_count = dataset_count | plus: asset.datasets.size -%}
   {%- for d in asset.datasets -%}
     {%- assign sources = sources | append: d.source | append: "|" -%}
+    {%- assign since_dates = since_dates | append: d.since | append: "|" -%}
   {%- endfor -%}
 {%- endfor -%}
 {%- assign source_count = sources | split: "|" | uniq | size -%}
+{%- assign coverage_start = since_dates | split: "|" | sort | first -%}
 
 <script type="application/ld+json">
 {
@@ -26,6 +29,7 @@ page_class: ethereum-page
   "name": "Open Prices — Ethereum Datasets",
   "description": "Daily refreshed on-chain price datasets extracted from Ethereum Mainnet: Chainlink oracle feeds and swap events from Uniswap V2, Uniswap V3, SushiSwap V2 and SushiSwap V3 pools, for ETH, LINK, UNI, AAVE, COMP and the USDC and USDT stablecoins.",
   "url": "https://fair.deepmining.ch/ethereum",
+  "temporalCoverage": {{ coverage_start | append: "/.." | jsonify }},
   "keywords": ["Ethereum", "ETH", "LINK", "UNI", "AAVE", "COMP", "USDC", "USDT", "Chainlink", "Uniswap V2", "Uniswap V3", "SushiSwap", "On-chain price", "Crypto dataset"],
   "license": "https://creativecommons.org/licenses/by/4.0/",
   "creator": {
@@ -59,6 +63,7 @@ page_class: ethereum-page
       "name": {{ d.source | append: " " | append: d.pair | append: " CSV" | jsonify }},
       "contentUrl": {{ data.download_url | append: d.file | jsonify }},
       "encodingFormat": "text/csv",
+      "temporalCoverage": {{ d.since | append: "/.." | jsonify }},
       "description": {{ d_description | jsonify }}
     }
     {%- endfor -%}
@@ -486,7 +491,7 @@ page_class: ethereum-page
 
   <section class="section">
     <h2>Datasets by asset</h2>
-    <p class="section-intro">DEX files are named <code>tokenA_tokenB_dex_version_fee.csv</code>, with the fee tier written without its dot (0.3% becomes <code>03</code>). Oracle files are named <code>chainlink_base_quote.csv</code>.</p>
+    <p class="section-intro">DEX files are named <code>tokenA_tokenB_dex_version_fee.csv</code>, with the fee tier written without its dot (0.3% becomes <code>03</code>). Oracle files are named <code>chainlink_base_quote.csv</code>. The Since column gives the UTC date of the first swap or oracle round in each file.</p>
     {%- for asset in data.assets %}
     <div class="asset-block" id="{{ asset.id }}">
       <div class="asset-heading">
@@ -496,7 +501,7 @@ page_class: ethereum-page
       </div>
       <table class="dataset-table">
         <thead>
-          <tr><th scope="col">Pair</th><th scope="col">Source</th><th scope="col">Fee tier</th><th scope="col">Contract</th><th scope="col">CSV file</th></tr>
+          <tr><th scope="col">Pair</th><th scope="col">Source</th><th scope="col">Fee tier</th><th scope="col">Since</th><th scope="col">Contract</th><th scope="col">CSV file</th></tr>
         </thead>
         <tbody>
           {%- for d in asset.datasets %}
@@ -510,8 +515,9 @@ page_class: ethereum-page
             </td>
             <td data-label="Source">{{ d.source }}</td>
             <td data-label="Fee tier">{{ d.fee | default: "—" }}</td>
+            <td data-label="Since"><time datetime="{{ d.since }}">{{ d.since }}</time></td>
             <td data-label="Contract"><a href="https://etherscan.io/address/{{ d.contract }}" target="_blank" rel="noopener" title="{{ d.contract }}"><code>{{ d.contract | slice: 0, 6 }}…{{ d.contract | slice: -4, 4 }}</code></a></td>
-            <td data-label="CSV file"><a href="{{ data.download_url }}{{ d.file }}" target="_blank" rel="noopener"><code>{{ d.file }}</code></a></td>
+            <td data-label="CSV file"><a href="{{ data.download_url }}{{ d.file }}" target="_blank" rel="noopener"><code>{{ d.file | replace: "_", "_<wbr>" }}</code></a></td>
           </tr>
           {%- endfor %}
         </tbody>
