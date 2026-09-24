@@ -308,13 +308,17 @@ logo_img: /assets/img/faironchain-white.png
           <li>A confidence score and the full provenance of every price</li>
           <li>No invented values: the price is <code>null</code> when no reliable source exists</li>
         </ul>
-        <a class="cta-primary" href="{{ site.data.ethereum_datasets.api_url }}" target="_blank" rel="noopener">Explore the API repository</a>
+        <p>The <strong>Open Price Explorer</strong> queries the API from your browser, with nothing to install: pick a token, a date and a granularity, and get the price with its confidence score and full provenance. It needs an API key: test keys are available on request through the <a href="/contact?subject=api-key">contact form</a>.</p>
+        <div class="api-actions">
+          <a class="cta-primary" href="{{ site.data.ethereum_datasets.explorer_url }}" target="_blank" rel="noopener">Open the Explorer ↗</a>
+          <a class="cta-secondary" href="{{ site.data.ethereum_datasets.api_url }}" target="_blank" rel="noopener">Explore the API repository</a>
+        </div>
       </div>
       <div>
         <pre><code>GET /v3/prices/LINK/at
     ?timestamp=2024-01-01T00:00:00Z
     &amp;granularity=hour</code></pre>
-        <p class="api-code-caption">Supported assets: ETH, LINK, UNI, AAVE and COMP. The API is self-hosted: clone the repository, point it at the downloaded CSV files and start it.</p>
+        <p class="api-code-caption">Supported assets: ETH, LINK, UNI, AAVE and COMP. Try it online with the Explorer, or self-host the API: clone the repository, point it at the downloaded CSV files and start it.</p>
       </div>
     </div>
   </section>

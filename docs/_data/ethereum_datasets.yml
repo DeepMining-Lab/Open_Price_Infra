@@ -18,6 +18,7 @@
 download_url: https://files.deepmining.ch/files/ethereum/prices/
 repo_url: https://github.com/DeepMining-Lab/Open_Price_Infra
 api_url: https://github.com/DeepMining-Lab/openprice-api
+explorer_url: https://openprice-explorer.deepmining.ch/
 
 assets:
   - id: eth

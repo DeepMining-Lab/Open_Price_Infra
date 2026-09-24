@@ -1005,9 +1005,157 @@ body.ethereum-page .usecase-card .dataset-button {
 .home-page .api-panel .cta-primary:hover {
   transform: translateY(-2px);
 }
+/* Boutons Explorer (principal) et dépôt de l'API (secondaire) */
+.home-page .api-panel .api-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.home-page .api-panel .cta-secondary {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.75rem 1.6rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #ecfeff;
+  border: 1px solid rgba(236, 254, 255, 0.55);
+  background: rgba(248, 250, 252, 0.06);
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+.home-page .api-panel .cta-secondary:hover {
+  transform: translateY(-2px);
+  background: rgba(248, 250, 252, 0.16);
+}
 @media (max-width: 720px) {
   .home-page .api-panel {
     grid-template-columns: minmax(0, 1fr);
     padding: 1.6rem 1.2rem;
+  }
+}
+
+/* Page Contact : formulaire envoyé par e-mail via Formspree, dans le même panneau
+ * que la section API de l'accueil (.api-panel)
+ * ----------------------------------------------
+ */
+.contact-page .contact-section {
+  max-width: 1100px;
+  /* Remonte le contenu sous l'en-tête vide du layout page, comme le logo de la page Ethereum */
+  margin: calc(2rem - 5cm) auto 4rem;
+  padding: 0 min(7vw, 5rem);
+}
+.contact-page .contact-section > h1 {
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  margin-bottom: 1.2rem;
+}
+.contact-page .contact-intro {
+  max-width: 680px;
+  margin: 0 auto 2.4rem;
+  text-align: center;
+  line-height: 1.6;
+  color: rgba(236, 254, 255, 0.84);
+}
+.home-page .contact-panel {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: start;
+}
+.home-page .contact-panel h2 {
+  display: block;
+  margin: 0 0 1rem;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+  text-align: left;
+}
+.contact-form {
+  display: grid;
+  gap: 1rem;
+}
+.contact-form label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5eead4;
+}
+.contact-form label span {
+  font-family: inherit;
+  font-size: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+  color: rgba(236, 254, 255, 0.6);
+}
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  border-radius: 12px;
+  background-color: rgba(2, 16, 9, 0.6);
+  color: #ecfeff;
+  color-scheme: dark;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.contact-form textarea {
+  min-height: 9rem;
+  resize: vertical;
+}
+.contact-form input:focus-visible,
+.contact-form select:focus-visible,
+.contact-form textarea:focus-visible,
+.contact-form button:focus-visible {
+  outline: 3px solid rgba(34, 211, 238, 0.55);
+  outline-offset: 2px;
+}
+.home-page .contact-form button {
+  justify-self: start;
+  border: 0;
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+  font-size: 1rem;
+}
+.home-page .contact-form button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+  transform: none;
+}
+/* Champ piège anti-spam, invisible pour les visiteurs */
+.contact-form .contact-hp {
+  display: none;
+}
+.home-page .contact-panel .contact-hint,
+.home-page .contact-panel .contact-status,
+.home-page .contact-panel .contact-privacy {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.home-page .contact-panel .contact-hint {
+  margin-top: 0.5rem;
+  color: #99f6e4;
+}
+.home-page .contact-panel .contact-status:empty {
+  display: none;
+}
+.home-page .contact-panel .contact-status[data-state="ok"] {
+  color: #4ade80;
+}
+.home-page .contact-panel .contact-status[data-state="error"] {
+  color: #fca5a5;
+}
+.home-page .contact-panel .contact-privacy {
+  color: rgba(236, 254, 255, 0.6);
+}
+@media (max-width: 720px) {
+  .contact-page .contact-section {
+    margin-top: 0;
+    padding: 0 1.2rem;
+  }
+  .home-page .contact-panel {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

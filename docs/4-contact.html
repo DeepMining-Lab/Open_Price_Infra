@@ -1,0 +1,137 @@
+---
+layout: page
+# title:
+menu: Contact
+permalink: /contact
+page_class: contact-page
+# Formulaire Formspree qui transmet chaque message par e-mail
+form_action: https://formspree.io/f/xeaokyyo
+---
+
+<div class="home-page contact-page">
+  <section class="contact-section">
+    <h1>Contact</h1>
+    <p class="contact-intro">Questions about the datasets or the API, feedback, or a test API key for the Open Price Explorer: send us a message and we will answer you by email.</p>
+
+    <div class="api-panel contact-panel">
+      <div>
+        <h2>Test API keys</h2>
+        <p>The <strong>Open Price Explorer</strong> queries the OpenPrice API through the DeepMining gateway, which requires an API key. During the test phase, keys are given on request:</p>
+        <ul>
+          <li>Choose “Request a test API key” as the subject</li>
+          <li>Give your project name and how you plan to use the API</li>
+          <li>We answer by email</li>
+        </ul>
+        <a class="cta-secondary" href="{{ site.data.ethereum_datasets.explorer_url }}" target="_blank" rel="noopener">Open the Explorer ↗</a>
+      </div>
+
+      <form class="contact-form" id="contact-form" action="{{ page.form_action }}" method="POST">
+        <div>
+          <label for="contact-name">Name</label>
+          <input type="text" id="contact-name" name="name" autocomplete="name" maxlength="120" required>
+        </div>
+        <div>
+          <label for="contact-email">Email</label>
+          <input type="email" id="contact-email" name="email" autocomplete="email" maxlength="254" required>
+        </div>
+        <div>
+          <label for="contact-organization">Organization <span>(optional)</span></label>
+          <input type="text" id="contact-organization" name="organization" autocomplete="organization" maxlength="160">
+        </div>
+        <div>
+          <label for="contact-topic">Subject</label>
+          <select id="contact-topic" name="topic" required>
+            <option value="" selected disabled>Choose a subject</option>
+            <option value="Request a test API key" data-key="api-key">Request a test API key</option>
+            <option value="Question about the datasets" data-key="datasets">Question about the datasets</option>
+            <option value="Other" data-key="other">Other</option>
+          </select>
+          <p class="contact-hint" id="contact-topic-hint" hidden>Please give your project name and how you plan to use the API: we need both to create your key.</p>
+        </div>
+        <div>
+          <label for="contact-message">Message</label>
+          <textarea id="contact-message" name="message" rows="6" maxlength="5000" required></textarea>
+        </div>
+        <input type="hidden" id="contact-subject" name="_subject" value="OpenPrice contact form">
+        <div class="contact-hp" aria-hidden="true">
+          <label for="contact-gotcha">Leave this field empty</label>
+          <input type="text" id="contact-gotcha" name="_gotcha" tabindex="-1" autocomplete="off">
+        </div>
+        <button type="submit" class="cta-primary">Send message</button>
+        <p class="contact-status" id="contact-status" role="status" aria-live="polite"></p>
+        <p class="contact-privacy">Your message is sent to us by email through Formspree, which keeps a copy for 30 days. We only use your details to answer your request.</p>
+      </form>
+    </div>
+  </section>
+</div>
+
+<script>
+  // Envoi sans quitter la page : Formspree répond en JSON. Sans JavaScript, le formulaire
+  // est posté normalement et Formspree affiche sa propre page de confirmation.
+  (() => {
+    const form = document.getElementById('contact-form');
+    const topic = document.getElementById('contact-topic');
+    const hint = document.getElementById('contact-topic-hint');
+    const message = document.getElementById('contact-message');
+    const subject = document.getElementById('contact-subject');
+    const status = document.getElementById('contact-status');
+    const button = form.querySelector('button[type="submit"]');
+    const buttonLabel = button.textContent;
+
+    // Objet du mail reçu, et aide affichée pour une demande de clé API
+    const updateTopic = () => {
+      const isKeyRequest = topic.selectedOptions[0]?.dataset.key === 'api-key';
+      subject.value = 'OpenPrice contact: ' + (topic.value || 'message');
+      hint.hidden = !isKeyRequest;
+      if (isKeyRequest) message.setAttribute('aria-describedby', hint.id);
+      else message.removeAttribute('aria-describedby');
+    };
+
+    const showStatus = (state, text) => {
+      status.dataset.state = state;
+      status.textContent = text;
+    };
+
+    // Sujet présélectionné par l'URL, ex. /contact?subject=api-key (liens de l'Explorer)
+    const wanted = new URLSearchParams(window.location.search).get('subject');
+    const preset = Array.from(topic.options).find((option) => option.dataset.key && option.dataset.key === wanted);
+    if (preset) topic.value = preset.value;
+    updateTopic();
+    topic.addEventListener('change', updateTopic);
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const sent = 'Thank you, your message has been sent. We will answer you by email.';
+      // Champ piège rempli : envoi d'un robot, rien n'est transmis
+      if (form.elements._gotcha.value) {
+        form.reset();
+        showStatus('ok', sent);
+        return;
+      }
+      button.disabled = true;
+      button.textContent = 'Sending…';
+      showStatus('', '');
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+        if (response.ok) {
+          form.reset();
+          updateTopic();
+          showStatus('ok', sent);
+        } else {
+          const data = await response.json().catch(() => ({}));
+          const detail = data.errors ? data.errors.map((e) => e.message).join(' ') : data.error;
+          showStatus('error', 'Your message could not be sent' + (detail ? ' (' + detail + ')' : '') + '. Please try again in a few minutes.');
+        }
+      } catch (error) {
+        showStatus('error', 'Your message could not be sent: the form service could not be reached. Please try again in a few minutes.');
+      } finally {
+        button.disabled = false;
+        button.textContent = buttonLabel;
+      }
+    });
+  })();
+</script>

@@ -565,6 +565,14 @@ page_class: ethereum-page
           <a class="dataset-button" href="{{ data.api_url }}" target="_blank" rel="noopener">openprice-api on GitHub</a>
         </div>
       </div>
+      <div class="usecase-card">
+        <h3>Open Price Explorer</h3>
+        <p>Query the API from your browser, with nothing to install: pick a token, a date and a granularity, and see the price with its confidence score and provenance. Test API keys are available on request.</p>
+        <div class="dataset-reference">
+          <a class="dataset-button" href="{{ data.explorer_url }}" target="_blank" rel="noopener">Open the Explorer ↗</a>
+          <a class="dataset-button" href="/contact?subject=api-key">Request a test key</a>
+        </div>
+      </div>
     </div>
   </section>
 </div>
