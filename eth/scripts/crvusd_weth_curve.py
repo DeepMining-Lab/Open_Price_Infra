@@ -2,6 +2,7 @@
 # © 2025 HES-SO / HEG Geneva / Deep Mining Lab / FairOnChain / Open Price ETH
 #
 # Curve pool crvUSD/WETH — 0x6e5492f8Ea2370844eE098a56dD88e1717E4A9C2
+# Pool Twocrypto-NG déployé au bloc 24183683 (2026-01-07 15:25:11 UTC)
 # coin0 = crvUSD (18 dec), coin1 = WETH (18 dec)
 # TVL exprimé en crvUSD (≈ USD) : crvUSD_balance + WETH_balance / price_weth_per_crvusd
 # slip_1k : achat de WETH avec 1 000 crvUSD via get_dy
@@ -28,10 +29,12 @@ if not RPC_URL:
     print("ERREUR: la variable d'environnement 'RPC' n'est pas définie.", file=sys.stderr)
     sys.exit(1)
 
-# Curve StableSwap NG — TokenExchange(address indexed buyer, uint256 indexed sold_id,
+# Curve Twocrypto-NG — TokenExchange(address indexed buyer, uint256 sold_id,
 #   uint256 tokens_sold, uint256 bought_id, uint256 tokens_bought,
 #   uint256 fee, uint256 packed_price_scale)
-EXPECTED_TOPIC0 = "0x0e1f3c59f25a027e14a3f55c68245d22089c42b1dcd09f123a11d4af3c0d6f72"
+# Seul buyer est indexé : sold_id et bought_id sont dans le champ data.
+# (0x0e1f3c59… est l'événement AddLiquidity de ce pool, pas un swap.)
+EXPECTED_TOPIC0 = "0x143f1f8e861fbdeddd5b46e844b7d3ac7b86a122f36e8c463859ee6811b1f29c"
 
 POOL_ADDRESS    = "0x6e5492f8Ea2370844eE098a56dD88e1717E4A9C2"
 TOKEN0_ADDRESS  = "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E"  # crvUSD
@@ -39,13 +42,14 @@ TOKEN1_ADDRESS  = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"  # WETH
 TOKEN0_DECIMALS = 18  # crvUSD
 TOKEN1_DECIMALS = 18  # WETH
 
+# Twocrypto-NG : get_dy(uint256, uint256, uint256) (la variante int128 des pools StableSwap revert ici)
 GET_DY_ABI = [
     {
         "name": "get_dy",
         "type": "function",
         "inputs": [
-            {"name": "i", "type": "int128"},
-            {"name": "j", "type": "int128"},
+            {"name": "i", "type": "uint256"},
+            {"name": "j", "type": "uint256"},
             {"name": "dx", "type": "uint256"},
         ],
         "outputs": [{"name": "", "type": "uint256"}],
@@ -65,7 +69,7 @@ BASE_TOKEN_SYMBOL       = "crvUSD"
 QUOTE_TOKEN_SYMBOL      = "WETH"
 PRICE_SOURCE_FIELD      = "amount_ratio"
 EVENT_SIGNATURE         = EXPECTED_TOPIC0
-SWAP_EVENT_ABI          = '[{"name":"TokenExchange","inputs":[{"name":"buyer","type":"address","indexed":true},{"name":"sold_id","type":"uint256","indexed":true},{"name":"tokens_sold","type":"uint256","indexed":false},{"name":"bought_id","type":"uint256","indexed":false},{"name":"tokens_bought","type":"uint256","indexed":false},{"name":"fee","type":"uint256","indexed":false},{"name":"packed_price_scale","type":"uint256","indexed":false}],"anonymous":false,"type":"event"}]'
+SWAP_EVENT_ABI          = '[{"name":"TokenExchange","inputs":[{"name":"buyer","type":"address","indexed":true},{"name":"sold_id","type":"uint256","indexed":false},{"name":"tokens_sold","type":"uint256","indexed":false},{"name":"bought_id","type":"uint256","indexed":false},{"name":"tokens_bought","type":"uint256","indexed":false},{"name":"fee","type":"uint256","indexed":false},{"name":"packed_price_scale","type":"uint256","indexed":false}],"anonymous":false,"type":"event"}]'
 ERC20_SYMBOL_ABI        = [{"name":"symbol","type":"function","inputs":[],"outputs":[{"name":"","type":"string"}],"stateMutability":"view"}]
 
 extraction_run_id        = str(uuid.uuid4())
@@ -104,47 +108,45 @@ def compute_quality_flags(pool_tvl, amount0_raw, amount1_raw, slip_1k, threshold
     return '|'.join(flags) if flags else "ok"
 
 
-def decode_swap_event(data_hex, sold_id_topic):
-    """Décode un événement TokenExchange Curve StableSwap NG.
+def decode_swap_event(data_hex):
+    """Décode un événement TokenExchange Curve Twocrypto-NG.
 
-    Dans le format NG, sold_id est indexé → il est dans topic2 (sold_id_topic),
-    PAS dans le champ data. Le champ data contient (dans l'ordre) :
-      [0]  tokens_sold       (uint256)
-      [1]  bought_id         (uint256)
-      [2]  tokens_bought     (uint256)
-      [3]  fee               (uint256, informatif)
-      [4]  packed_price_scale (uint256, informatif)
+    Seul buyer est indexé (topic1). Le champ data contient (dans l'ordre) :
+      [0]  sold_id            (uint256)
+      [1]  tokens_sold        (uint256)
+      [2]  bought_id          (uint256)
+      [3]  tokens_bought      (uint256)
+      [4]  fee                (uint256, informatif)
+      [5]  packed_price_scale (uint256, informatif)
     """
     try:
-        # sold_id vient du topic2 (uint256)
-        sold_id = int(str(sold_id_topic).replace('0x', ''), 16)
-
         data = data_hex.replace('0x', '')
-        tokens_sold   = int(data[0:64],   16)
-        bought_id     = int(data[64:128],  16)
-        tokens_bought = int(data[128:192], 16)
-        # data[192:256] = fee, data[256:320] = packed_price_scale (ignorés)
+        sold_id       = int(data[0:64],    16)
+        tokens_sold   = int(data[64:128],  16)
+        bought_id     = int(data[128:192], 16)
+        tokens_bought = int(data[192:256], 16)
+        # data[256:320] = fee, data[320:384] = packed_price_scale (ignorés)
 
-        sold_dec   = mp.mpf(tokens_sold)   / 10**TOKEN0_DECIMALS
-        bought_dec = mp.mpf(tokens_bought) / 10**TOKEN1_DECIMALS
+        if {sold_id, bought_id} != {0, 1}:
+            raise ValueError(f"indices de coins inattendus: sold_id={sold_id}, bought_id={bought_id}")
 
         if sold_id == 0:
             # coin0 (crvUSD) vendu → coin1 (WETH) acheté
-            crvusd_amount   =  sold_dec
-            weth_amount     = -bought_dec
+            crvusd_amount   =  mp.mpf(tokens_sold)   / 10**TOKEN0_DECIMALS
+            weth_amount     = -mp.mpf(tokens_bought) / 10**TOKEN1_DECIMALS
             amount0_raw_int =  int(tokens_sold)
             amount1_raw_int = -int(tokens_bought)
         else:
             # coin1 (WETH) vendu → coin0 (crvUSD) acheté
-            crvusd_amount   = -bought_dec
-            weth_amount     =  sold_dec
+            crvusd_amount   = -mp.mpf(tokens_bought) / 10**TOKEN0_DECIMALS
+            weth_amount     =  mp.mpf(tokens_sold)   / 10**TOKEN1_DECIMALS
             amount0_raw_int = -int(tokens_bought)
             amount1_raw_int =  int(tokens_sold)
 
         return crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought, amount0_raw_int, amount1_raw_int
     except Exception as e:
         print(f"Erreur dans decode_swap_event: {e}")
-        print(f"Data hex reçue: {data_hex}, sold_id_topic: {sold_id_topic}")
+        print(f"Data hex reçue: {data_hex}")
         raise
 
 
@@ -254,7 +256,7 @@ def process_curve_logs(csv_path, web3, pool_contract):
                 log_address = str(row.get("address", "")).lower()
                 if log_address and log_address != POOL_ADDRESS.lower():
                     continue
-                crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought, amount0_raw, amount1_raw = decode_swap_event(row['data'], row.get('topic2'))
+                crvusd_amount, weth_amount, sold_id, tokens_sold, tokens_bought, amount0_raw, amount1_raw = decode_swap_event(row['data'])
                 price, volume = calculate_price(crvusd_amount, weth_amount)
                 block_info = blocks.get(row['block_number'])
                 if not block_info or not block_info[0]:

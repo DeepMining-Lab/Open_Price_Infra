@@ -102,9 +102,18 @@ def main():
     last_line_str = _last_line(data_file)
 
     if not last_line_str or last_line_str.startswith(data_cols[0]):
-        # data_file est vide (ou seulement le header) : append complet
-        print(f"[INFO] {base_data} vide — append complet de {n_last} lignes.")
-        _append_df_to_file(df_last, data_file, write_header=True)
+        # data_file est vide (ou seulement le header) : on le remplace par last_file, header compris.
+        # (Un append avec header écrirait le header une deuxième fois, au milieu du fichier.)
+        print(f"[INFO] {base_data} vide — écriture complète de {n_last} lignes.")
+        tmp_file = data_file + '.tmp'
+        try:
+            df_last.to_csv(tmp_file, index=False)
+            os.replace(tmp_file, data_file)
+        except Exception as e:
+            if os.path.exists(tmp_file):
+                os.remove(tmp_file)
+            print(f"[ERROR] Écriture atomique échouée: {e}", file=sys.stderr)
+            sys.exit(1)
         os.remove(last_file)
         print(f"[INFO] Terminé: {n_last} lignes ajoutées.")
         return

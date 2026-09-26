@@ -6,6 +6,18 @@ In the folders corresponding to each blockchain (e.g., "eth"), you will find the
 The docs folder contains information related to the web pages for each blockchain.
 
 
+## 🛠️ Backfilling a Chainlink feed
+
+`tools/merge_chainlink_rounds.py` adds to a Chainlink CSV the rounds it is missing, for example the rounds of an old aggregator phase. First re-extract the feed from an old date into a working folder (never into `data/`), then merge:
+
+```bash
+python3 scripts/chainlink_eth_usd.py --debut 1546300800      # writes data/chainlink_eth_usd_last.csv (run it in a scratch copy)
+python3 tools/merge_chainlink_rounds.py <re-extraction.csv> <data.csv>                               # dry run
+python3 tools/merge_chainlink_rounds.py <re-extraction.csv> <data.csv> --apply --backup-dir <dir>    # merge
+```
+
+Rounds already present must be identical, existing lines are kept as they are, and new rounds are inserted in chronological order. Rounds newer than the last line are left to the daily extraction. Rounds of a replaced aggregator that was later destroyed are read at the last block where it still answered (archive node), and their `rpc_method_used` says which block (`eth_call:getRoundData@block:<n>`).
+
 ## 📂 Accessing CSV Data by Blockchain
 
 You can visit the following portal, which redirects to each individual blockchain’s data repository for downloading CSV files:  

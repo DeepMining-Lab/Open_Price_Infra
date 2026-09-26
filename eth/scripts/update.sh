@@ -222,8 +222,9 @@ DATA_FILE_POOL="$PROJECT_DIR/data/crvusd_weth_curve.csv"
 LAST_FILE_POOL="$PROJECT_DIR/data/crvusd_weth_curve_last.csv"
 last_iso_pool=$(tail -n 1 "$DATA_FILE_POOL" | cut -d',' -f1)
 if [[ "$last_iso_pool" == "timestamp" ]] || [[ -z "$last_iso_pool" ]]; then
-  start_ts_pool=1546300800
-  echo "[INFO] CSV crvusd_weth_curve vide, démarrage depuis la date par défaut."
+  # Le pool n'existe que depuis le bloc 24183683 (2026-01-07 15:25:11 UTC) : inutile de scanner depuis 2019
+  start_ts_pool=1767799511
+  echo "[INFO] CSV crvusd_weth_curve vide, démarrage au déploiement du pool (2026-01-07)."
 else
   start_ts_pool=$(( $(date -d "$last_iso_pool" +"%s") + 1 ))
 fi
