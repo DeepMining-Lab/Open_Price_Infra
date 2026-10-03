@@ -7,13 +7,13 @@ Open Price LINK is an open-data initiative providing a standardized, continuousl
 
 | Dataset                          | End Date Available              | CSV File                                      |
 |----------------------------------|---------------------------------|-----------------------------------------------|
-| **Chainlink LINK/USD**        | 2026-10-02 18:47:59 UTC      | `data/chainlink_link_usd.csv`                |
-| **Uniswap V3 LINK/USDC**     | 2026-10-02 18:46:11 UTC        | `data/link_usdc_uniswap_v3_03.csv`           |
-| **Uniswap V3 LINK/USDT**     | 2026-10-02 18:47:59 UTC           | `data/link_usdt_uniswap_v3_03.csv`           |
-| **Uniswap V3 LINK/WETH**     | 2026-10-02 18:48:47 UTC        | `data/link_weth_uniswap_v3_03.csv`           |
-| **SushiSwap V3 LINK/ETH**    | 2026-10-02 18:40:11 UTC       | `data/link_eth_sushiswap_v3_03.csv`          |
-| **Uniswap V2 LINK/WETH**     | 2026-10-02 18:43:59 UTC        | `data/link_weth_uniswap_v2_03.csv`           |
-| **SushiSwap V2 LINK/ETH**    | 2026-10-02 18:44:11 UTC       | `data/link_eth_sushiswap_v2_03.csv`          |
+| **Chainlink LINK/USD**        | 2026-10-03 18:47:11 UTC      | `data/chainlink_link_usd.csv`                |
+| **Uniswap V3 LINK/USDC**     | 2026-10-03 18:08:23 UTC        | `data/link_usdc_uniswap_v3_03.csv`           |
+| **Uniswap V3 LINK/USDT**     | 2026-10-03 17:17:47 UTC           | `data/link_usdt_uniswap_v3_03.csv`           |
+| **Uniswap V3 LINK/WETH**     | 2026-10-03 18:45:47 UTC        | `data/link_weth_uniswap_v3_03.csv`           |
+| **SushiSwap V3 LINK/ETH**    | 2026-10-03 16:59:23 UTC       | `data/link_eth_sushiswap_v3_03.csv`          |
+| **Uniswap V2 LINK/WETH**     | 2026-10-03 17:10:11 UTC        | `data/link_weth_uniswap_v2_03.csv`           |
+| **SushiSwap V2 LINK/ETH**    | 2026-10-03 17:53:35 UTC       | `data/link_eth_sushiswap_v2_03.csv`          |
 
 ---
 
