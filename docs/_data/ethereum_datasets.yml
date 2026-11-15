@@ -5,8 +5,8 @@
 # POOL_ADDRESS / CONTRACT_ADDRESS constants of {asset}/scripts/*.py.
 # Labels follow the "Available Datasets" table of each {asset}/README.md.
 #
-# Not listed on purpose: crvusd_weth_curve.csv (Curve crvUSD/WETH), whose
-# extraction currently produces an empty file.
+# crvusd_weth_curve.csv (Curve crvUSD/WETH) is listed since 2026-11-15: its
+# extraction was fixed on 2026-09-26 and the file has rows from 2026-01-07.
 #
 # `since` is the UTC date of the first row of each CSV (the files are sorted by
 # date; checked on 2026-09-23). It feeds the "Since" column and the JSON-LD
@@ -30,6 +30,7 @@ assets:
       - { file: eth_usdc_uniswap_v3_005.csv,    pair: ETH/USDC,  source: Uniswap V3,   fee: 0.05%, since: "2021-05-05", contract: "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640" }
       - { file: weth_usdc_uniswap_v2_03.csv,    pair: WETH/USDC, source: Uniswap V2,   fee: 0.3%,  since: "2020-05-05", contract: "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc" }
       - { file: weth_usdt_uniswap_v2_03.csv,    pair: WETH/USDT, source: Uniswap V2,   fee: 0.3%,  since: "2020-05-19", contract: "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852" }
+      - { file: crvusd_weth_curve.csv,          pair: crvUSD/WETH, source: Curve,                  since: "2026-01-07", contract: "0x6e5492f8Ea2370844eE098a56dD88e1717E4A9C2" }
 
   - id: link
     name: LINK

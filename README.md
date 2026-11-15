@@ -56,6 +56,26 @@ In the `docs` folder, you will find information related to the web pages for eac
 Feel free to clone or fork any of the extraction scripts, contribute improvements, or integrate the datasets directly into your workflows for a transparent, reproducible view of blockchain price dynamics.  
 
 
+## 🧾 License
+
+`SPDX-License-Identifier: MIT` for the code, `SPDX-License-Identifier: CC-BY-4.0` for the data and the documentation.
+
+- **Extraction code** (the `scripts/` folder of each asset, `tools/`, Dockerfiles and entrypoints): MIT License, see [`LICENSE`](LICENSE).
+- **Datasets** (the CSV files published at <https://files.deepmining.ch/files/ethereum/prices/>) **and documentation** (the README files and the `docs/` site): Creative Commons Attribution 4.0 International (CC BY 4.0), see [`LICENSES/CC-BY-4.0.txt`](LICENSES/CC-BY-4.0.txt).
+
+Versions of this repository up to commit `01752d1e67` were distributed under CC BY 4.0 as a whole (`LICENSE.txt`, and the `SPDX-License-Identifier: CC-BY-4.0` line at the top of each script); that grant remains valid for those versions.
+
+## 🔁 Recovering the data version of a publication
+
+The CSV files are living files: new rows are appended every day, existing rows are never rewritten. A past version of a file is therefore the beginning of the current file. For the version evaluated in the OpenPrice article (`a87252328cd8246d`, 2026-11-02), [`docs/versions/a87252328cd8246d/`](docs/versions/a87252328cd8246d/) gives, for each of the 31 files, the number of bytes of that version and their SHA-256:
+
+```bash
+# first N bytes of the living file = the file as it was in version a87252328cd8246d
+head -c <octets_de_la_version> eth_usdc_uniswap_v3_005.csv | sha256sum    # must equal sha256_de_la_version
+```
+
+The same folder holds the manifest the API published for that version (`GET /v3/datasets/versions/a87252328cd8246d`).
+
 ### 🌐 About Website
 
 ## Jekyll Installation

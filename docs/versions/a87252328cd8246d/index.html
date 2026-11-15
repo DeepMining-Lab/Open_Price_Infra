@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Prices: data version a87252328cd8246d</title>
+<style>body{font-family:system-ui,sans-serif;max-width:46rem;margin:2rem auto;padding:0 1rem;line-height:1.5}code{background:#f2f2f2;padding:.1rem .3rem}pre{background:#f2f2f2;padding:.8rem;overflow-x:auto}</style>
+</head>
+<body>
+<h1>Open Prices: data version <code>a87252328cd8246d</code></h1>
+<p>Version of the Ethereum price datasets evaluated in the OpenPrice article (2 November 2026): 31 CSV files, 31&nbsp;793&nbsp;049 data lines (31&nbsp;792&nbsp;939 rows once the 110 duplicated swap events of the ETH/USDC file are removed).</p>
+<p>The CSV files of <a href="https://files.deepmining.ch/files/ethereum/prices/">the public folder</a> are living files: new rows are appended every day and existing rows are never rewritten. Each file of this version is therefore the beginning of the current file.</p>
+<ul>
+<li><a href="inventaire_version_a87252328cd8246d.csv">inventaire_version_a87252328cd8246d.csv</a>: for each file, the number of bytes of this version, their SHA-256 and the number of rows</li>
+<li><a href="manifeste_store_v3_a87252328cd8246d.json">manifeste_store_v3_a87252328cd8246d.json</a>: the manifest the API published for this version (<code>GET /v3/datasets/versions/a87252328cd8246d</code>)</li>
+<li><a href="inventaire_store_v3.csv">inventaire_store_v3.csv</a>: file versions, quality counters, pool and feed addresses</li>
+<li><a href="table_des_phases_chainlink.csv">table_des_phases_chainlink.csv</a>: the block at which each Chainlink proxy moved to each aggregator phase</li>
+</ul>
+<pre>head -c &lt;octets_de_la_version&gt; eth_usdc_uniswap_v3_005.csv | sha256sum   # must equal sha256_de_la_version</pre>
+<p><a href="https://fair.deepmining.ch/">Open Prices</a></p>
+</body>
+</html>

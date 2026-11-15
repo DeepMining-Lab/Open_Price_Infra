@@ -27,7 +27,7 @@ page_class: ethereum-page
   "@type": "Dataset",
   "@id": "https://fair.deepmining.ch/ethereum#dataset",
   "name": "Open Prices — Ethereum Datasets",
-  "description": "Daily refreshed on-chain price datasets extracted from Ethereum Mainnet: Chainlink oracle feeds and swap events from Uniswap V2, Uniswap V3, SushiSwap V2 and SushiSwap V3 pools, for ETH, LINK, UNI, AAVE, COMP and the USDC and USDT stablecoins.",
+  "description": "Daily refreshed on-chain price datasets extracted from Ethereum Mainnet: Chainlink oracle feeds and swap events from Uniswap V2, Uniswap V3, SushiSwap V2, SushiSwap V3 and Curve pools, for ETH, LINK, UNI, AAVE, COMP and the USDC and USDT stablecoins.",
   "url": "https://fair.deepmining.ch/ethereum",
   "temporalCoverage": {{ coverage_start | append: "/.." | jsonify }},
   "keywords": ["Ethereum", "ETH", "LINK", "UNI", "AAVE", "COMP", "USDC", "USDT", "Chainlink", "Uniswap V2", "Uniswap V3", "SushiSwap", "On-chain price", "Crypto dataset"],
@@ -451,7 +451,7 @@ page_class: ethereum-page
   <section class="home-hero">
     <span class="eyebrow">Ethereum datasets</span>
     <h1>Open Prices — Ethereum</h1>
-    <p class="hero-copy">Every price below is read directly from Ethereum Mainnet: the rounds of Chainlink oracle feeds and the swap events of Uniswap and SushiSwap pools. Each CSV holds the complete history of its source and is updated daily.</p>
+    <p class="hero-copy">Every price below is read directly from Ethereum Mainnet: the rounds of Chainlink oracle feeds and the swap events of Uniswap, SushiSwap and Curve pools. Each CSV holds the complete history of its source and is updated daily.</p>
     <ul class="hero-stats">
       <li><strong>{{ dataset_count }}</strong><span>CSV datasets</span></li>
       <li><strong>{{ source_count }}</strong><span>on-chain sources</span></li>
@@ -484,7 +484,7 @@ page_class: ethereum-page
       </div>
       <div class="daily-card dataset-card">
         <h3><span class="dataset-icon" aria-hidden="true">🍣</span><span>SushiSwap V2 &amp; V3</span></h3>
-        <p>The same swap-level schema as Uniswap, for the SushiSwap pools that pair each asset with ETH.</p>
+        <p>The same swap-level schema as Uniswap, for the SushiSwap pools that pair each asset with ETH, and for the Curve crvUSD/WETH pool.</p>
       </div>
     </div>
   </section>
