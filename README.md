@@ -23,6 +23,15 @@ Rounds already present must be identical, existing lines are kept as they are, a
 You can visit the following portal, which redirects to each individual blockchain’s data repository for downloading CSV files:  
 🔗 [https://fair.deepmining.ch/](https://fair.deepmining.ch/)
 
+### Download from a script
+
+The CSV files sit in a public File Browser folder (https://files.deepmining.ch/files/ethereum/prices/): a browser needs no account. A script first asks for an anonymous token, then sends it in the `X-Auth` header:
+
+```bash
+TOKEN=$(curl -fsS -X POST https://files.deepmining.ch/api/login -H 'Content-Type: application/json' -d '{}')
+curl -fsS -H "X-Auth: $TOKEN" -O https://files.deepmining.ch/api/raw/ethereum/prices/chainlink_eth_usd.csv
+```
+
 In each blockchain folder (e.g., `eth`), you will find the scripts used to extract the data, as well as the script used to generate the `README.md` from the `README.tpl.md` template.
 
 The file `README.md` provides:  
@@ -40,7 +49,7 @@ In the `docs` folder, you will find information related to the web pages for eac
 
 - 🔍 **FAIR Compliance**  
   - **Findable**: Clear folder hierarchy, metadata tags in CSV headers  
-  - **Accessible**: Public HTTPS endpoints, no authentication required  
+  - **Accessible**: public HTTPS folder; no account in a browser, an anonymous token for a script (see "Download from a script" below)  
   - **Interoperable**: Uniform CSV schema across all blockchains  
   - **Reusable**: Detailed provenance and extraction scripts provided  
 

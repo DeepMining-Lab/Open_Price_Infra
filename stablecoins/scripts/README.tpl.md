@@ -122,7 +122,7 @@ Open Price Stablecoins is an open-data initiative providing standardized, contin
 
 ## 🧾 License
 
-All contents of this repository (data, code, and documentation) are licensed under the
-[Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+The extraction code (the `scripts/` folder) is licensed under the [MIT License](../LICENSE); the data (the CSV
+files) and this documentation under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
 
 **HES-SO / HEG Geneva / Deep Mining Lab / FairOnChain / Open Price ETH**

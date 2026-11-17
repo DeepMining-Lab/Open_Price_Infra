@@ -462,7 +462,7 @@ page_class: ethereum-page
         Download Ethereum price CSVs
       </a>
     </div>
-    <p class="hero-note">All files sit in a single public folder, no authentication required.</p>
+    <p class="hero-note">All files sit in a single public folder. A browser needs no account; a script first asks for an anonymous token, then sends it in the <code>X-Auth</code> header (<a href="#download-from-a-script">commands</a>).</p>
   </section>
 
   <nav class="asset-nav" aria-label="Datasets by asset">
@@ -524,6 +524,13 @@ page_class: ethereum-page
       </table>
     </div>
     {%- endfor %}
+  </section>
+
+  <section class="section" id="download-from-a-script">
+    <h2>Download from a script</h2>
+    <p class="section-intro">The folder is served by a File Browser application. A script asks for an anonymous token, then reads each file with it:</p>
+<pre><code>TOKEN=$(curl -fsS -X POST https://files.deepmining.ch/api/login -H 'Content-Type: application/json' -d '{}')
+curl -fsS -H "X-Auth: $TOKEN" -O https://files.deepmining.ch/api/raw/ethereum/prices/chainlink_eth_usd.csv</code></pre>
   </section>
 
   <section class="section">

@@ -37,8 +37,8 @@ We use a Jinja2 template plus a Python script to inject the extraction date auto
 
 ## 🧾 License
 
-All contents of this repository (data, code, and documentation) are licensed under the  
-[Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).  
+The extraction code (the `scripts/` folder) is licensed under the [MIT License](../LICENSE); the data (the CSV  
+files) and this documentation under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).  
 
 You are free to use, adapt, and share, **as long as you credit the original authors**:  
 **HES-SO / HEG Geneva / Deep Mining Lab / FairOnChain / Open Price ETH**

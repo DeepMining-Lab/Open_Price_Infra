@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below. The datasets it produces are published under CC BY 4.0."
+type: software
+title: "Open Prices: extraction of on-chain price data from Ethereum"
+abstract: >-
+  Extraction scripts and documentation site of the Open Prices datasets: the rounds of seven Chainlink price feeds and
+  the swap events of Uniswap V2 and V3, SushiSwap V2 and V3 and Curve pools on Ethereum Mainnet (ETH, LINK, UNI, AAVE,
+  COMP, USDC, USDT), with, for every row, its block, transaction, pool liquidity, simulated execution cost and
+  extraction fingerprint. The code is under the MIT License; the datasets and the documentation under CC BY 4.0.
+authors:
+  - family-names: Augusto
+    given-names: Stéphane
+    affiliation: "HES-SO, HEG Geneva, Deep Mining Lab"
+repository-code: "https://github.com/DeepMining-Lab/Open_Price_Infra"
+url: "https://fair.deepmining.ch/"
+license: MIT
+version: "1.0.0"
+date-released: "2026-11-17"
+keywords:
+  - on-chain data
+  - Ethereum
+  - Chainlink
+  - Uniswap
+  - decentralized exchanges
+  - historical prices
+  - FAIR data

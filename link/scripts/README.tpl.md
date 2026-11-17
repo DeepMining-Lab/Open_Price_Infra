@@ -89,7 +89,7 @@ Open Price LINK is an open-data initiative providing a standardized, continuousl
 | `liquidity`           | uint128 | Active in-range liquidity of the pool at the time of the swap                               |
 | `tick`                | int24   | Current tick of the pool at the time of the swap                                             |
 | `pool_tvl_at_block`   | float   | Total Value Locked in USD at the swap block (USDC balance + LINK balance × price)           |
-| `slip_1k`             | float   | Simulated cost of a 1 000 USDC→LINK swap: price impact + fee tier (via QuoterV2). `None` for pre-2022 blocks (QuoterV2 not yet deployed). |
+| `slip_1k`             | float   | Simulated cost of a 1 000 USDC→LINK swap: price impact + fee tier (via QuoterV2). `None` for blocks before 13 723 980 (2021-12-01 23:35 UTC), when QuoterV2 was deployed. |
 
 **Metadata d'extraction**
 
@@ -385,7 +385,7 @@ Uniswap V2 and SushiSwap V2 LINK/WETH pools. Price derived from swap amounts; re
 
 ## 🧾 License
 
-All contents of this repository (data, code, and documentation) are licensed under the
-[Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+The extraction code (the `scripts/` folder) is licensed under the [MIT License](../LICENSE); the data (the CSV
+files) and this documentation under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
 
 **HES-SO / HEG Geneva / Deep Mining Lab / FairOnChain / Open Price ETH**
